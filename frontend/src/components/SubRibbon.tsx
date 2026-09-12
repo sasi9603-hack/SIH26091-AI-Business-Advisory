@@ -28,7 +28,7 @@ export const SubRibbon: React.FC<SubRibbonProps> = ({
             }`}
           >
             <CheckCircle2 className="w-3.5 h-3.5 text-sbi-yellow" />
-            <span>Mudra &amp; PMEGP Advisory</span>
+            <span>SIH26091 Scheme Advisory</span>
           </button>
 
           <button
@@ -52,7 +52,7 @@ export const SubRibbon: React.FC<SubRibbonProps> = ({
             }`}
           >
             <Calculator className="w-3.5 h-3.5 text-amber-300" />
-            <span>Loan &amp; EMI Calculator</span>
+            <span>Financial Structuring</span>
           </button>
 
           <button

@@ -2,64 +2,66 @@ import { GovernmentSchemeItem } from '../types';
 
 export const OFFICIAL_SCHEMES: GovernmentSchemeItem[] = [
   {
-    id: 'pmmy',
-    name: 'Pradhan Mantri MUDRA Yojana (PMMY)',
-    shortCode: 'MUDRA',
-    ministry: 'Department of Financial Services (DFS), Ministry of Finance',
-    maxProjectCost: 1000000,
-    subsidyPctRange: 'Collateral-free credit up to ₹10 Lakhs',
-    beneficiaryEquityPct: 'Nil to 10%',
-    targetBeneficiaries: 'Non-Corporate, Non-Farm Small/Micro Enterprises (Shishu: up to ₹50k, Kishore: ₹50k-₹5L, Tarun: ₹5L-₹10L)',
+    id: 'micro-finance',
+    name: 'Micro Finance Scheme',
+    shortCode: 'MICRO-FIN',
+    ministry: 'Ministry of MSME / SIH26091 Priority Credit Facility',
+    maxProjectCost: 140000,
+    subsidyPctRange: 'Funding Up to 90% of Project Cost (Max ₹1.25 Lakh)',
+    beneficiaryEquityPct: '10% Available Margin Capital',
+    targetBeneficiaries: 'Small and micro business units in rural and semi-urban localities',
     keyFeatures: [
-      'Collateral-free loan backed by Credit Guarantee Fund (CGFMU)',
-      'Working capital overdraft and term loan facility',
-      'No processing fee for Shishu and Kishore category loans',
-      'Direct online application via JanSamarth portal'
+      'Project cost ceiling: Up to ₹1.40 Lakh',
+      'Maximum eligible loan: ₹1.25 Lakh',
+      'Concessional interest rate: 6.5% per annum',
+      'Repayment tenure: 3 Years with 3-Month Moratorium period',
+      'Quarterly debt servicing schedule'
     ],
     eligibilityConditions: [
-      'Indian citizen with viable business plan in trading, manufacturing, or services',
-      'No prior default record with any commercial bank or cooperative',
-      'Age between 18 and 65 years'
+      'Total estimated project cost must not exceed ₹1,40,000',
+      'Beneficiary contribution (Margin Capital) of at least 10%',
+      'Applicable for small/micro business trade and rural repair units',
+      'No prior institutional banking default'
     ],
     documentChecklist: [
-      'Aadhaar Card & Voter ID for KYC proof',
-      'Passport size photographs (2)',
-      'Proof of business location / trade license or village panchayat NOC',
-      'Quotation of machinery/tools to be purchased',
-      'Last 6 months bank statement (if available)'
+      'Aadhaar Card for biometric authentication',
+      'Proof of business location / Gram Panchayat NOC',
+      'Quotation of initial machinery/tools',
+      'Bank passbook for direct benefit disbursement'
     ],
-    portalUrl: 'https://www.mudra.org.in',
-    nodalAgency: 'Commercial Banks, RRBs, Micro Finance Institutions (MFIs)'
+    portalUrl: 'https://www.jansamarth.in',
+    nodalAgency: 'Public Sector Banks, Regional Rural Banks (RRBs), and MFIs'
   },
   {
-    id: 'pmegp',
-    name: "Prime Minister's Employment Generation Programme (PMEGP)",
-    shortCode: 'PMEGP',
-    ministry: 'Ministry of Micro, Small & Medium Enterprises (MoMSME) / KVIC',
+    id: 'term-loan',
+    name: 'Term Loan Scheme',
+    shortCode: 'TERM-LOAN',
+    ministry: 'Ministry of MSME / SIH26091 Scalable Enterprise Credit',
     maxProjectCost: 5000000,
-    subsidyPctRange: '15% to 35% Credit-Linked Capital Subsidy',
-    beneficiaryEquityPct: '5% (Special Category) / 10% (General)',
-    targetBeneficiaries: 'New micro-enterprises in manufacturing (up to ₹50L) and services (up to ₹20L) in rural & urban regions',
+    subsidyPctRange: 'Funding Up to 90% of Project Cost (Max ₹45.00 Lakh)',
+    beneficiaryEquityPct: '10% Available Margin Capital',
+    targetBeneficiaries: 'Larger micro-enterprise projects in rural & semi-urban clusters',
     keyFeatures: [
-      'Highest margin money subsidy (35% for rural special category applicants)',
-      'Direct credit-linked subsidy routed through nodal banks',
-      'Mandatory Entrepreneurship Development Programme (EDP) training',
-      'CGTMSE collateral-free loan coverage available'
+      'Project cost eligibility: > ₹1.40 Lakh and <= ₹50.00 Lakh',
+      'Maximum eligible loan: ₹45.00 Lakh',
+      'Interest rate: 8% per annum',
+      'Repayment tenure: 7 Years with 6-Month Moratorium period',
+      'Quarterly debt servicing schedule'
     ],
     eligibilityConditions: [
-      'Individuals above 18 years of age',
-      'At least 8th standard pass for manufacturing units above ₹10L or service units above ₹5L',
-      'Only applicable for greenfield / new business units'
+      'Project cost must be between ₹1.40 Lakh and ₹50.00 Lakh',
+      'Beneficiary contribution (Margin Capital) of at least 10%',
+      'Viable project plan for greenfield or capacity expansion micro-enterprise',
+      'Regular banking KYC verification'
     ],
     documentChecklist: [
-      'Detailed Project Report (DPR) with cash-flow projections',
-      'Educational qualification certificate (8th/10th mark sheet)',
-      'Caste/Category certificate for special category margin money subsidy',
-      'Rural area certificate issued by Block Development Officer (BDO) / Sarpanch',
-      'Aadhaar card & PAN card'
+      'Detailed Project Report (DPR) with equipment cost estimates',
+      'Aadhaar Card and PAN card',
+      'Land/lease agreement for business premises',
+      'Bank account statement for the last 6 months'
     ],
-    portalUrl: 'https://www.kviconline.gov.in/pmegp',
-    nodalAgency: 'KVIC, KVIB, District Industries Centres (DIC), and Public Sector Banks'
+    portalUrl: 'https://www.jansamarth.in',
+    nodalAgency: 'Commercial Banks, SIDBI, and Public Sector Lending Institutions'
   },
   {
     id: 'pm-fme',
@@ -107,7 +109,7 @@ export const OFFICIAL_SCHEMES: GovernmentSchemeItem[] = [
     eligibilityConditions: [
       'Practicing traditional trade / craft hands-on',
       'Minimum age 18 years on the date of application',
-      'One member per family eligible; not currently availing similar credit scheme (PMEGP/Mudra)'
+      'One member per family eligible; not currently availing similar credit subsidy scheme'
     ],
     documentChecklist: [
       'Aadhaar card with mobile link for biometric verification',
@@ -121,13 +123,12 @@ export const OFFICIAL_SCHEMES: GovernmentSchemeItem[] = [
 
 export function getMatchingSchemes(
   _category: string,
-  _projectCost: number,
+  projectCost: number,
   isRural: boolean
 ): GovernmentSchemeItem[] {
-  // Return schemes prioritised for rural entrepreneurship
   return OFFICIAL_SCHEMES.filter(s => {
-    if (s.id === 'pmegp') return true;
-    if (s.id === 'pmmy') return true;
+    if (s.id === 'micro-finance' && projectCost <= 140000) return true;
+    if (s.id === 'term-loan' && projectCost > 140000 && projectCost <= 5000000) return true;
     if (isRural && s.id === 'pm-fme') return true;
     return true;
   });

@@ -90,7 +90,26 @@ export async function fetchAdvisoryEvaluation(profile: EntrepreneurProfile, exis
     }
   }
 
-  const aiNarrative = `Location: PIN ${profile.pincode} (${profile.villageTown || 'Target Location'}). Identified mapped businesses in radius: ${competitorCount}. For a planned equity of ₹${profile.availableCapital.toLocaleString('en-IN')}, the estimated project cost is ₹${financials.totalProjectCost.toLocaleString('en-IN')}. Applicable capital subsidy (PMEGP): ${financials.subsidyPercentage}% (₹${financials.subsidyAmount.toLocaleString('en-IN')}). Estimated monthly EMI: ₹${financials.monthlyEmi.toLocaleString('en-IN')}. Required monthly break-even sales turnover: ₹${financials.breakEvenMonthlyRevenue.toLocaleString('en-IN')}.`;
+  let aiNarrative = '';
+  const recommendationsList: string[] = [];
+  const riskWarnings: string[] = [];
+
+  if (financials.isOutsideRange) {
+    aiNarrative = `Location: PIN ${profile.pincode} (${profile.villageTown || 'Target Location'}). Mapped businesses in radius: ${competitorCount}. For an Available Margin Capital of ₹${profile.availableCapital.toLocaleString('en-IN')}, the calculated project cost is ₹${financials.totalProjectCost.toLocaleString('en-IN')}, which exceeds the ₹50.00 Lakh upper ceiling specified for the Term Loan Scheme under the SIH26091 framework.`;
+    recommendationsList.push('Adjust available margin capital to ₹5,00,000 or below to qualify within the SIH26091 Term Loan Scheme threshold.');
+    riskWarnings.push('Calculated project cost exceeds the ₹50 Lakh maximum ceiling for SIH26091 financial schemes.');
+  } else {
+    aiNarrative = `Location: PIN ${profile.pincode} (${profile.villageTown || 'Target Location'}). Identified mapped businesses in radius: ${competitorCount}. Based on Available Margin Capital of ₹${profile.availableCapital.toLocaleString('en-IN')} (10% contribution), Estimated Project Cost is ₹${financials.totalProjectCost.toLocaleString('en-IN')}. Recommended Scheme: ${financials.selectedSchemeName} (${financials.annualInterestRate}% p.a., ${financials.repaymentTenureYears} Years tenure, ${financials.moratoriumMonths}-Month Moratorium). Eligible Loan: ₹${financials.eligibleLoan.toLocaleString('en-IN')} (maximum cap: ₹${financials.schemeMaximumCap.toLocaleString('en-IN')}). Estimated Repayment: ₹${financials.quarterlyInstallment.toLocaleString('en-IN')} / quarter.`;
+    recommendationsList.push(
+      `Apply under ${financials.selectedSchemeName} with ${financials.annualInterestRate}% p.a. interest and ${financials.moratoriumMonths}-month moratorium.`,
+      `Ensure 10% margin contribution (₹${(financials.totalProjectCost * 0.10).toLocaleString('en-IN')}) is maintained in your enterprise bank account.`,
+      `Maintain working capital liquidity of at least ₹${financials.workingCapitalBuffer.toLocaleString('en-IN')} during setup and moratorium.`
+    );
+    riskWarnings.push(
+      `Quarterly debt servicing of ~₹${financials.quarterlyInstallment.toLocaleString('en-IN')} commences following the ${financials.moratoriumMonths}-month moratorium.`,
+      `Ensure business operations break-even above ₹${financials.breakEvenMonthlyRevenue.toLocaleString('en-IN')} in monthly sales revenue.`
+    );
+  }
 
   const report: AdvisoryReport = {
     opportunityScore,
@@ -102,15 +121,8 @@ export async function fetchAdvisoryEvaluation(profile: EntrepreneurProfile, exis
     discoveredCompetitorsCount: competitorCount,
     financialFeasibilityScore: financials.riskRating === 'LOW' ? 85 : 60,
     aiNarrative,
-    recommendationsList: [
-      `Review eligibility for ${financials.subsidyPercentage}% capital subsidy under PMEGP or collateral-free loan under Mudra.`,
-      `Maintain a working capital buffer of at least ₹${financials.workingCapitalBuffer.toLocaleString('en-IN')}.`,
-      `Conduct local ground verification to check for unmapped weekly markets or informal vendors.`
-    ],
-    riskWarnings: [
-      `Loan repayment requires consistent monthly turnover above ₹${financials.breakEvenMonthlyRevenue.toLocaleString('en-IN')}.`,
-      `Verify official registration with local District Industries Centre (DIC).`
-    ]
+    recommendationsList,
+    riskWarnings
   };
 
   return { report, financials, competitors };

@@ -27,9 +27,9 @@ export const AIAssistantChat: React.FC<AIAssistantChatProps> = ({
   const [messages, setMessages] = useState<Message[]>([
     {
       sender: 'bot',
-      text: profile.pincode 
-        ? `Namaste! I am your SIH26091 Grounded AI Advisory Assistant. I synthesize verified spatial data, financial calculations, and government scheme rules for ${profile.villageTown || 'your area'} (PIN ${profile.pincode}). How can I assist your business plan today?`
-        : `Namaste! I am your SIH26091 Grounded AI Advisory Assistant. Configure your target location and budget in the profile configurator, and I will assist you with verified spatial competition data and government subsidies.`,
+      text: profile.villageTown || profile.pincode 
+        ? `Namaste! I am your SIH26091 Grounded AI Advisory Assistant. I synthesize verified spatial intelligence, financial calculations, and official SIH26091 scheme rules (Micro Finance & Term Loan) for ${profile.villageTown || 'your area'}. How can I assist your enterprise plan today?`
+        : `Namaste! I am your SIH26091 Grounded AI Advisory Assistant. Configure your target location and Available Margin Capital in the profile configurator, and I will assist you with verified spatial competition data and scheme structuring.`,
       time: 'Just now'
     }
   ]);
@@ -51,17 +51,19 @@ export const AIAssistantChat: React.FC<AIAssistantChatProps> = ({
       const lower = q.toLowerCase();
 
       if (!financials || !report || financials.totalProjectCost <= 0) {
-        botResponse = `Please click "Change Profile" on the top right to configure your target PIN code, business sector, and available equity capital. Once configured, I will calculate the exact subsidy eligibility and financial breakdown.`;
-      } else if (lower.includes('subsidy') || lower.includes('pmegp') || lower.includes('margin')) {
-        botResponse = `Under PMEGP guidelines for rural ${profile.socialCategory} category applicants, you are eligible for up to 35% margin money capital subsidy (₹${financials.subsidyAmount.toLocaleString('en-IN')}). Your personal beneficiary equity requirement is only 5% (₹${financials.beneficiaryContributionAmt.toLocaleString('en-IN')}). The application is routed via the District Industries Centre (DIC) on the KVIC portal.`;
+        botResponse = `Please click "Change Profile" to configure your target location and Available Margin Capital. Once entered, I will calculate your estimated project cost (10x margin) and match the Micro Finance Scheme or Term Loan Scheme under SIH26091 guidelines.`;
+      } else if (financials.isOutsideRange) {
+        botResponse = `Your calculated project cost of ₹${financials.totalProjectCost.toLocaleString('en-IN')} (from an available margin of ₹${profile.availableCapital.toLocaleString('en-IN')}) exceeds the ₹50 lakh ceiling specified for the Term Loan Scheme under the SIH26091 framework. Please adjust your available margin capital to ₹5,00,000 or below.`;
+      } else if (lower.includes('scheme') || lower.includes('loan') || lower.includes('margin') || lower.includes('cap')) {
+        botResponse = `Under the SIH26091 10% beneficiary contribution model, your available margin of ₹${profile.availableCapital.toLocaleString('en-IN')} establishes an estimated project cost of ₹${financials.totalProjectCost.toLocaleString('en-IN')}. You qualify for the ${financials.selectedSchemeName} with an eligible loan of ₹${financials.eligibleLoan.toLocaleString('en-IN')} (capped at ₹${financials.schemeMaximumCap.toLocaleString('en-IN')}) at ${financials.annualInterestRate}% p.a. interest over ${financials.repaymentTenureYears} years.`;
       } else if (lower.includes('competition') || lower.includes('competitor') || lower.includes('shops')) {
-        botResponse = `Our spatial engine discovered ${report.discoveredCompetitorsCount} existing competitor(s) within a 3km radius of PIN ${profile.pincode}. This represents a ${report.saturationLevel} saturation level (${report.saturationIndex} index). Because local demand is steady, a new shop with modern equipment and prompt turnaround will be viable.`;
-      } else if (lower.includes('emi') || lower.includes('break-even') || lower.includes('cost')) {
-        botResponse = `For a total estimated project budget of ₹${financials.totalProjectCost.toLocaleString('en-IN')}, your bank loan portion is ₹${financials.loanPrincipal.toLocaleString('en-IN')}. Over a 5-year tenure at ${financials.annualInterestRate}% interest, your monthly EMI is approximately ₹${financials.monthlyEmi.toLocaleString('en-IN')}. To break even, your shop must generate at least ₹${financials.breakEvenMonthlyRevenue.toLocaleString('en-IN')} in monthly revenue.`;
-      } else if (lower.includes('mudra') || lower.includes('pmmy')) {
-        botResponse = `Pradhan Mantri Mudra Yojana (PMMY) provides collateral-free working capital and term loans. For your budget level, you fall under the MUDRA KISHORE category (loans between ₹50,000 and ₹5,00,000). You can apply directly through JanSamarth or any commercial bank branch in ${profile.district}.`;
+        botResponse = `Our spatial engine discovered ${report.discoveredCompetitorsCount} existing competitor(s) in radius. This represents a ${report.saturationLevel} saturation level (${report.saturationIndex} index). Because local demand is steady, a well-equipped enterprise with prompt turnaround will be viable.`;
+      } else if (lower.includes('moratorium') || lower.includes('repayment') || lower.includes('quarter') || lower.includes('emi')) {
+        botResponse = `Under the ${financials.selectedSchemeName}, you receive an initial ${financials.moratoriumMonths}-month moratorium where no principal repayment is required. Following this grace period, your estimated quarterly repayment is approximately ₹${financials.quarterlyInstallment.toLocaleString('en-IN')} per quarter across ${(financials.repaymentTenureYears * 4) - Math.round(financials.moratoriumMonths / 3)} quarters.`;
+      } else if (lower.includes('break-even') || lower.includes('cost') || lower.includes('revenue')) {
+        botResponse = `To comfortably cover operating overheads plus quarterly debt servicing (~₹${Math.round(financials.quarterlyInstallment / 3).toLocaleString('en-IN')}/month equivalent), your enterprise in ${profile.villageTown || 'your area'} must generate at least ₹${financials.breakEvenMonthlyRevenue.toLocaleString('en-IN')} in monthly sales at a ${financials.grossMarginPercentage}% gross margin.`;
       } else {
-        botResponse = `Based on your profile in ${profile.villageTown || 'your area'}, your current Opportunity Score is ${report.opportunityScore}/100 with a verdict of "${report.verdictLabel}". We recommend applying for PMEGP subsidy to minimize debt load and stocking high-turnover spare parts.`;
+        botResponse = `Based on your profile in ${profile.villageTown || 'your target area'}, your Opportunity Score is ${report.opportunityScore}/100 with a verdict of "${report.verdictLabel}". Your eligible funding tier is the ${financials.selectedSchemeName} with a ₹${financials.eligibleLoan.toLocaleString('en-IN')} loan and a ${financials.moratoriumMonths}-month moratorium.`;
       }
 
       setMessages([...newMessages, { sender: 'bot', text: botResponse, time: 'Just now' }]);
@@ -69,10 +71,10 @@ export const AIAssistantChat: React.FC<AIAssistantChatProps> = ({
   };
 
   const quickPrompts = [
-    "How to get 35% PMEGP subsidy?",
-    "Why is competition moderate?",
-    "What is my monthly break-even?",
-    "Documents needed for Mudra loan?"
+    "What is my eligible scheme & loan?",
+    "Explain moratorium & repayment",
+    "How is project cost calculated?",
+    "What is my monthly break-even?"
   ];
 
   return (

@@ -9,8 +9,8 @@ export const BRANDING = {
   // Path to the primary logo image (relative to public/)
   logoUrl: "/assets/logo.png",
   
-  // Optional secondary badge or emblem (e.g. Mudra / MSME emblem)
-  emblemUrl: "/assets/pmmy_icon.svg",
+  // Optional secondary badge or emblem (e.g. National Emblem / MSME emblem)
+  emblemUrl: "/assets/logo.png",
 
   // Portal text branding
   portalName: "SIH26091 ADVISORY",

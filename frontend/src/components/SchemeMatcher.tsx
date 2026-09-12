@@ -8,19 +8,24 @@ interface SchemeMatcherProps {
 }
 
 export const SchemeMatcher: React.FC<SchemeMatcherProps> = () => {
-  const [selectedSchemeId, setSelectedSchemeId] = useState<string>('pmegp');
+  const [selectedSchemeId, setSelectedSchemeId] = useState<string>('term-loan');
   const activeScheme = OFFICIAL_SCHEMES.find(s => s.id === selectedSchemeId) || OFFICIAL_SCHEMES[0];
 
   return (
     <div className="bg-white rounded-xl shadow-sbi border border-sbi-border p-6 space-y-6">
       {/* Header */}
       <div className="border-b border-slate-100 pb-4">
-        <h2 className="text-xl font-bold text-sbi-navy flex items-center gap-2">
-          <BookOpen className="w-5 h-5 text-sbi-blue" />
-          <span>Government Schemes &amp; Capital Subsidy Matchmaker</span>
-        </h2>
-        <p className="text-xs text-slate-500 mt-0.5">
-          Central &amp; State Government credit-linked capital subsidies verified against official ministry circulars
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-xl font-bold text-sbi-navy flex items-center gap-2">
+            <BookOpen className="w-5 h-5 text-sbi-blue" />
+            <span>SIH26091 Financial Schemes Directory</span>
+          </h2>
+          <span className="text-[10px] bg-sky-50 text-sbi-blue font-bold px-2.5 py-1 rounded-full border border-sky-200">
+            Official SIH26091 Framework
+          </span>
+        </div>
+        <p className="text-xs text-slate-500 mt-1">
+          Scheme specifications based on project cost and 10% beneficiary margin contribution
         </p>
       </div>
 

@@ -1,120 +1,111 @@
 import { FinancialBreakdown, SocialCategory, BusinessCategory } from '../types';
+import { evaluateSIHScheme } from './sihSchemes';
 
 /**
  * Deterministic Financial Feasibility Calculator based on SIH26091 specifications.
- * All formulas align with standard banking reducing balance EMI and break-even accounting.
+ * Uses the 10% Beneficiary Contribution (Margin Capital) model and the official
+ * Micro Finance Scheme (<= ₹1.40L) & Term Loan Scheme (> ₹1.40L to ₹50L).
  */
 export function calculateFinancials(
   category: BusinessCategory,
-  availableBudget: number,
-  socialCategory: SocialCategory,
-  isRural: boolean,
-  interestRateAnnual: number = 9.5,
-  tenureMonths: number = 60
+  availableMargin: number,
+  _socialCategory?: SocialCategory,
+  _isRural?: boolean
 ): FinancialBreakdown {
-  // Baseline CapEx benchmarks per sector
-  let baseCapEx = 160000;
-  let baseOpExBuffer = 40000;
-  let grossMargin = 40.0;
+  const sih = evaluateSIHScheme(availableMargin);
+
+  // Sector margin and fixed cost benchmarks
+  let grossMargin = 35.0;
   let baseFixedCosts = 4500;
 
   switch (category) {
     case 'agro-repair':
-      baseCapEx = 160000;
-      baseOpExBuffer = 40000;
       grossMargin = 40.0;
       baseFixedCosts = 4500;
       break;
     case 'grocery':
-      baseCapEx = 100000;
-      baseOpExBuffer = 50000;
       grossMargin = 18.0;
       baseFixedCosts = 5000;
       break;
     case 'tailoring':
-      baseCapEx = 75000;
-      baseOpExBuffer = 25000;
       grossMargin = 50.0;
       baseFixedCosts = 3500;
       break;
     case 'dairy':
-      baseCapEx = 200000;
-      baseOpExBuffer = 50000;
       grossMargin = 30.0;
       baseFixedCosts = 6000;
       break;
     case 'food-processing':
-      baseCapEx = 250000;
-      baseOpExBuffer = 60000;
       grossMargin = 35.0;
       baseFixedCosts = 7000;
       break;
     default:
-      baseCapEx = 150000;
-      baseOpExBuffer = 40000;
       grossMargin = 35.0;
       baseFixedCosts = 4000;
   }
 
-  // Adjust CapEx based on user budget scaling
-  const scale = availableBudget > 0 ? Math.max(0.6, Math.min(2.5, availableBudget / (baseCapEx * 0.2))) : 1.0;
-  const machinery = Math.round((baseCapEx * 0.8) * scale);
-  const setup = Math.round((baseCapEx * 0.2) * scale);
-  const workingCapital = Math.round(baseOpExBuffer * scale);
-  const totalCost = machinery + setup + workingCapital;
+  const totalCost = sih.projectCost;
+  const machinery = Math.round(totalCost * 0.70);
+  const setup = Math.round(totalCost * 0.15);
+  const workingCapital = Math.round(totalCost * 0.15);
 
-  // Beneficiary Contribution percentage: 5% for Special Category (SC/ST/OBC/Women/Rural), 10% for General
-  const isSpecial = socialCategory !== 'GENERAL' || isRural;
-  const benEquityPct = isSpecial ? 5.0 : 10.0;
-  const benEquityAmt = Math.round((totalCost * benEquityPct) / 100);
+  const benEquityAmt = Math.round(totalCost * 0.10);
+  const loanPrincipal = sih.eligibleLoan;
 
-  // Subsidy: PMEGP Rural Special = 35%, Rural General = 25%, Urban Special = 25%, Urban General = 15%
-  let subsidyPct = 15.0;
-  if (isRural && isSpecial) {
-    subsidyPct = 35.0;
-  } else if (isRural || isSpecial) {
-    subsidyPct = 25.0;
-  }
-  const subsidyAmt = Math.round((totalCost * subsidyPct) / 100);
-
-  // Bank Loan required
-  const loanPrincipal = Math.max(0, totalCost - benEquityAmt - subsidyAmt);
-
-  // Reducing balance EMI calculation
-  const monthlyRate = (interestRateAnnual / 12) / 100;
+  // Monthly amortized equivalent for comparative evaluation
+  const monthlyRate = (sih.interestRate / 12) / 100;
   let monthlyEmi = 0;
-  if (loanPrincipal > 0 && tenureMonths > 0) {
+  if (loanPrincipal > 0 && sih.tenureMonths > 0 && monthlyRate > 0) {
     monthlyEmi = Math.round(
-      (loanPrincipal * monthlyRate * Math.pow(1 + monthlyRate, tenureMonths)) /
-      (Math.pow(1 + monthlyRate, tenureMonths) - 1)
+      (loanPrincipal * monthlyRate * Math.pow(1 + monthlyRate, sih.tenureMonths)) /
+      (Math.pow(1 + monthlyRate, sih.tenureMonths) - 1)
     );
   }
 
-  // Break-even monthly sales
-  const totalMonthlyFixed = baseFixedCosts + monthlyEmi;
-  const breakEvenRevenue = Math.round(totalMonthlyFixed / (grossMargin / 100));
+  // Break-even monthly sales based on quarterly/monthly overheads
+  const monthlyDebtService = sih.quarterlyInstallment > 0 ? Math.round(sih.quarterlyInstallment / 3) : monthlyEmi;
+  const totalMonthlyFixed = baseFixedCosts + monthlyDebtService;
+  const breakEvenRevenue = grossMargin > 0 ? Math.round(totalMonthlyFixed / (grossMargin / 100)) : 0;
 
   // Risk rating
   let risk: 'LOW' | 'MODERATE' | 'HIGH' = 'LOW';
-  const debtRatio = loanPrincipal / totalCost;
-  if (debtRatio > 0.65 || monthlyEmi > 6000) {
+  if (sih.isOutsideRange) {
     risk = 'HIGH';
-  } else if (debtRatio > 0.45 || monthlyEmi > 3500) {
-    risk = 'MODERATE';
+  } else if (totalCost > 0) {
+    const debtRatio = loanPrincipal / totalCost;
+    if (debtRatio > 0.85 || monthlyDebtService > 25000) {
+      risk = 'MODERATE';
+    }
   }
 
   return {
+    // SIH26091 Scheme Fields
+    selectedSchemeName: sih.schemeName,
+    schemeId: sih.selectedScheme ? sih.selectedScheme.id : (sih.isOutsideRange ? 'outside-range' : null),
+    isOutsideRange: sih.isOutsideRange,
+    rangeWarning: sih.warningMessage,
+    availableMarginCapital: availableMargin,
     totalProjectCost: totalCost,
+    rawCalculatedLoan: sih.rawLoan,
+    schemeMaximumCap: sih.schemeCap,
+    eligibleLoan: sih.eligibleLoan,
+    annualInterestRate: sih.interestRate,
+    repaymentTenureYears: sih.tenureYears,
+    moratoriumMonths: sih.moratoriumMonths,
+    repaymentFrequency: sih.repaymentFrequency,
+    quarterlyInstallment: sih.quarterlyInstallment,
+    repaymentSchedule: sih.repaymentSchedule,
+
+    // CapEx breakdown & viability
     machineryAndEquipment: machinery,
     setupAndLicensing: setup,
     workingCapitalBuffer: workingCapital,
-    beneficiaryContributionPct: benEquityPct,
+    beneficiaryContributionPct: 10.0,
     beneficiaryContributionAmt: benEquityAmt,
-    subsidyPercentage: subsidyPct,
-    subsidyAmount: subsidyAmt,
+    subsidyPercentage: 0,
+    subsidyAmount: 0,
     loanPrincipal: loanPrincipal,
-    annualInterestRate: interestRateAnnual,
-    tenureMonths: tenureMonths,
+    tenureMonths: sih.tenureMonths,
     monthlyEmi: monthlyEmi,
     fixedMonthlyCosts: totalMonthlyFixed,
     grossMarginPercentage: grossMargin,
@@ -122,3 +113,4 @@ export function calculateFinancials(
     riskRating: risk
   };
 }
+

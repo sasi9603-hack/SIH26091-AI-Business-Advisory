@@ -76,7 +76,7 @@ export const MainHeader: React.FC<MainHeaderProps> = ({ activeTab, onTabChange, 
                 : 'border-transparent hover:text-sbi-blue hover:bg-slate-50'
             }`}
           >
-            GOVT SCHEMES (PMMY / PMEGP)
+            FINANCIAL SCHEMES
           </button>
         </nav>
 
