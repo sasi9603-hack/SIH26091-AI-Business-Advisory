@@ -13,7 +13,8 @@ import {
   Calendar,
   AlertTriangle,
   ArrowRight,
-  Info
+  Info,
+  CheckCircle2
 } from 'lucide-react';
 
 interface AdvisoryOverviewProps {
@@ -648,11 +649,11 @@ export const AdvisoryOverview: React.FC<AdvisoryOverviewProps> = ({
             {/* Quick Action Navigation CTAs */}
             <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-slate-100">
               <button
-                onClick={() => onNavigateTab('map')}
+                onClick={() => onNavigateTab('schemes')}
                 className="bg-sbi-blue hover:bg-sbi-blue-dark text-white font-bold text-xs px-4 py-2 rounded-md shadow-sm transition active:scale-95 flex items-center gap-1.5"
               >
-                <MapPin className="w-3.5 h-3.5" />
-                <span>View Competitor Map</span>
+                <CheckCircle2 className="w-3.5 h-3.5 text-sbi-yellow" />
+                <span>View Eligible Schemes</span>
               </button>
 
               <button
@@ -692,15 +693,6 @@ export const AdvisoryOverview: React.FC<AdvisoryOverviewProps> = ({
           >
             <ExternalLink className="w-5 h-5 text-emerald-600 group-hover:scale-110 transition" />
             <span className="text-[9px] font-bold text-slate-600 mt-1 leading-tight">Schemes</span>
-          </button>
-
-          <button
-            onClick={() => onNavigateTab('map')}
-            className="w-14 h-16 bg-white hover:bg-sky-50 border border-sbi-border rounded-xl shadow-sbi flex flex-col items-center justify-center p-1.5 text-center transition group active:scale-95"
-            title="Local Map"
-          >
-            <MapPin className="w-5 h-5 text-amber-500 group-hover:scale-110 transition" />
-            <span className="text-[9px] font-bold text-slate-600 mt-1 leading-tight">Map View</span>
           </button>
 
           <button

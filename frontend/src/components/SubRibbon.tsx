@@ -1,17 +1,15 @@
 import React from 'react';
-import { MapPin, Calculator, BookOpen, MessageSquareText, FileText, CheckCircle2 } from 'lucide-react';
+import { Calculator, BookOpen, MessageSquareText, CheckCircle2 } from 'lucide-react';
 
 interface SubRibbonProps {
   activeModule: string;
   onSelectModule: (mod: string) => void;
-  onOpenCommunityModal: () => void;
   onOpenChat: () => void;
 }
 
 export const SubRibbon: React.FC<SubRibbonProps> = ({
   activeModule,
   onSelectModule,
-  onOpenCommunityModal,
   onOpenChat
 }) => {
   return (
@@ -29,18 +27,6 @@ export const SubRibbon: React.FC<SubRibbonProps> = ({
           >
             <CheckCircle2 className="w-3.5 h-3.5 text-sbi-yellow" />
             <span>SIH26091 Scheme Advisory</span>
-          </button>
-
-          <button
-            onClick={() => onSelectModule('map')}
-            className={`px-3 py-2 rounded flex items-center gap-1.5 transition ${
-              activeModule === 'map'
-                ? 'bg-sbi-indigo text-white font-bold shadow-inner'
-                : 'hover:bg-white/15 text-sky-50'
-            }`}
-          >
-            <MapPin className="w-3.5 h-3.5 text-white" />
-            <span>Local Market Map</span>
           </button>
 
           <button
@@ -68,17 +54,8 @@ export const SubRibbon: React.FC<SubRibbonProps> = ({
           </button>
         </div>
 
-        {/* Action Buttons: Community Reporting & AI Chat */}
+        {/* Action Buttons: AI Chat */}
         <div className="flex items-center space-x-2 py-1 pl-4">
-          <button
-            onClick={onOpenCommunityModal}
-            className="bg-white/20 hover:bg-white/30 text-white font-semibold text-xs px-2.5 py-1.5 rounded flex items-center gap-1 transition active:scale-95"
-            title="Report local unmapped vendors to improve community accuracy"
-          >
-            <FileText className="w-3.5 h-3.5 text-amber-300" />
-            <span className="hidden sm:inline">Add Local Business</span>
-          </button>
-
           <button
             onClick={onOpenChat}
             className="bg-sbi-indigo hover:bg-purple-950 text-white font-bold text-xs px-3 py-1.5 rounded flex items-center gap-1.5 shadow-md border border-purple-400/30 transition active:scale-95"

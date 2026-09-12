@@ -3,11 +3,9 @@ import { TopUtilityBar } from './components/TopUtilityBar';
 import { MainHeader } from './components/MainHeader';
 import { SubRibbon } from './components/SubRibbon';
 import { AdvisoryOverview } from './components/AdvisoryOverview';
-import { CompetitorMap } from './components/CompetitorMap';
 import { FinancialCalculator } from './components/FinancialCalculator';
 import { SchemeMatcher } from './components/SchemeMatcher';
 import { InputWizard } from './components/InputWizard';
-import { CommunityReportModal } from './components/CommunityReportModal';
 import { AIAssistantChat } from './components/AIAssistantChat';
 import { Footer } from './components/Footer';
 
@@ -20,13 +18,12 @@ export const App: React.FC = () => {
   const [profile, setProfile] = useState<EntrepreneurProfile>(DEFAULT_PROFILE);
   const [report, setReport] = useState<AdvisoryReport | null>(null);
   const [financials, setFinancials] = useState<FinancialBreakdown | null>(null);
-  const [competitors, setCompetitors] = useState<CompetitorBusiness[]>(INITIAL_COMPETITORS);
+  const [competitors] = useState<CompetitorBusiness[]>(INITIAL_COMPETITORS);
 
   const [activeTab, setActiveTab] = useState<string>('overview');
   const [currentLang, setCurrentLang] = useState<string>('en');
 
   const [isWizardOpen, setIsWizardOpen] = useState<boolean>(false);
-  const [isCommunityModalOpen, setIsCommunityModalOpen] = useState<boolean>(false);
   const [isChatOpen, setIsChatOpen] = useState<boolean>(false);
 
   // Load advisory evaluation whenever profile changes
@@ -36,15 +33,6 @@ export const App: React.FC = () => {
       setFinancials(data.financials);
     });
   }, [profile]);
-
-  const handleAddCommunityCompetitor = (newComp: CompetitorBusiness) => {
-    const updated = [newComp, ...competitors];
-    setCompetitors(updated);
-    fetchAdvisoryEvaluation(profile, updated).then((data) => {
-      setReport(data.report);
-      setFinancials(data.financials);
-    });
-  };
 
   return (
     <div className="min-h-screen flex flex-col bg-sbi-bg text-slate-800 font-sans">
@@ -65,7 +53,6 @@ export const App: React.FC = () => {
       <SubRibbon
         activeModule={activeTab}
         onSelectModule={setActiveTab}
-        onOpenCommunityModal={() => setIsCommunityModalOpen(true)}
         onOpenChat={() => setIsChatOpen(true)}
       />
 
@@ -80,16 +67,6 @@ export const App: React.FC = () => {
             onNavigateTab={setActiveTab}
             onOpenWizard={() => setIsWizardOpen(true)}
             onOpenChat={() => setIsChatOpen(true)}
-          />
-        )}
-
-        {activeTab === 'map' && (
-          <CompetitorMap
-            competitors={competitors}
-            centerLat={16.3067}
-            centerLng={80.4365}
-            locationName={profile.pincode ? `${profile.villageTown || 'Target Location'}, PIN ${profile.pincode}` : 'Target Search Area'}
-            onOpenAddModal={() => setIsCommunityModalOpen(true)}
           />
         )}
 
@@ -126,14 +103,6 @@ export const App: React.FC = () => {
         onClose={() => setIsWizardOpen(false)}
         currentProfile={profile}
         onSaveProfile={setProfile}
-      />
-
-      <CommunityReportModal
-        isOpen={isCommunityModalOpen}
-        onClose={() => setIsCommunityModalOpen(false)}
-        onAddCompetitor={handleAddCommunityCompetitor}
-        centerLat={16.3067}
-        centerLng={80.4365}
       />
 
       <AIAssistantChat

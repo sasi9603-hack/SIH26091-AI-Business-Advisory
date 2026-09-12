@@ -49,16 +49,6 @@ export const MainHeader: React.FC<MainHeaderProps> = ({ activeTab, onTabChange, 
             ADVISORY DASHBOARD
           </button>
           <button
-            onClick={() => onTabChange('map')}
-            className={`px-3 py-2 rounded-t border-b-2 transition ${
-              activeTab === 'map'
-                ? 'border-sbi-blue text-sbi-blue font-bold bg-blue-50/50'
-                : 'border-transparent hover:text-sbi-blue hover:bg-slate-50'
-            }`}
-          >
-            SPATIAL MAP
-          </button>
-          <button
             onClick={() => onTabChange('calculator')}
             className={`px-3 py-2 rounded-t border-b-2 transition ${
               activeTab === 'calculator'
