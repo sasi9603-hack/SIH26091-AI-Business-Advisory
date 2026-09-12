@@ -12,8 +12,8 @@ The proposed platform is an **AI-powered hyper-local business advisory and finan
 |                           SIH26091 PLATFORM PILLARS                              |
 +--------------------------+--------------------------+-----------------------------+
 |  1. Spatial Market Map   | 2. Financial Structuring | 3. Govt Scheme Matchmaker   |
-|  - Overpass / OSM GIS    | - Capital Cost Model     | - PMEGP, Mudra, PM-FME      |
-|  - UDYAM Registry Check  | - EMI & Break-Even Calc  | - Subsidy Estimation        |
+|  - Overpass / OSM GIS    | - Capital Cost Model     | - Micro Finance & Term Loan |
+|  - UDYAM Registry Check  | - EMI & Break-Even Calc  | - Scheme Structuring Engine |
 |  - Community Reporting   | - Feasibility Score      | - Document Checklist        |
 +--------------------------+--------------------------+-----------------------------+
 |                         4. DETERMINISTIC AI AGENT ADVISOR                         |

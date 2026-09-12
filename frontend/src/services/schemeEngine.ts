@@ -62,74 +62,17 @@ export const OFFICIAL_SCHEMES: GovernmentSchemeItem[] = [
     ],
     portalUrl: 'https://www.jansamarth.in',
     nodalAgency: 'Commercial Banks, SIDBI, and Public Sector Lending Institutions'
-  },
-  {
-    id: 'pm-fme',
-    name: 'PM Formalisation of Micro Food Processing Enterprises (PM-FME)',
-    shortCode: 'PM-FME',
-    ministry: 'Ministry of Food Processing Industries (MoFPI)',
-    maxProjectCost: 1000000,
-    subsidyPctRange: '35% Credit-linked Capital Subsidy (Max ₹10 Lakhs)',
-    beneficiaryEquityPct: '10% of total project cost',
-    targetBeneficiaries: 'Micro food processing units, SHGs, FPOs, and rural agro-produce processors under One District One Product (ODOP)',
-    keyFeatures: [
-      'Financial support for capital investment, branding, and packaging',
-      'Technical support and food safety training (FSSAI norms)',
-      'Seed capital for Self-Help Group (SHG) members (₹40,000 per member)'
-    ],
-    eligibilityConditions: [
-      'Existing or new micro food processing enterprise',
-      'Alignment with designated One District One Product (ODOP) produce preferred',
-      'Ownership by individual entrepreneur, partnership, or cooperative'
-    ],
-    documentChecklist: [
-      'UDYAM registration certificate',
-      'Land/lease agreement of processing premises',
-      'FSSAI basic registration or intent declaration',
-      'Quotations for food-grade machinery and cold-storage units'
-    ],
-    portalUrl: 'https://pmfme.mofpi.gov.in',
-    nodalAgency: 'State Nodal Agencies (SNA) and District Level Committees (DLC)'
-  },
-  {
-    id: 'pm-vishwakarma',
-    name: 'PM Vishwakarma Scheme',
-    shortCode: 'VISHWAKARMA',
-    ministry: 'Ministry of MSME and Ministry of Skill Development',
-    maxProjectCost: 300000,
-    subsidyPctRange: 'Collateral-free Enterprise Loan @ Concessional 5% Interest',
-    beneficiaryEquityPct: '0% (Nil)',
-    targetBeneficiaries: 'Artisans and craftspeople across 18 traditional trades (Blacksmith, Carpenter, Tailor, Cobbler, Potter, Repair workers)',
-    keyFeatures: [
-      'Collateral-free loan: 1st tranche ₹1 Lakh, 2nd tranche ₹2 Lakhs @ 5% interest',
-      'Modern tool kit incentive grant of ₹15,000',
-      'Skill training stipend (₹500/day during 5-7 days training)',
-      'PM Vishwakarma digital identity card and certificate'
-    ],
-    eligibilityConditions: [
-      'Practicing traditional trade / craft hands-on',
-      'Minimum age 18 years on the date of application',
-      'One member per family eligible; not currently availing similar credit subsidy scheme'
-    ],
-    documentChecklist: [
-      'Aadhaar card with mobile link for biometric verification',
-      'Bank passbook photocopy showing IFSC and Account number',
-      'Ration card or family declaration proof'
-    ],
-    portalUrl: 'https://pmvishwakarma.gov.in',
-    nodalAgency: 'Common Service Centres (CSC), Gram Panchayats, Urban Local Bodies'
   }
 ];
 
 export function getMatchingSchemes(
   _category: string,
   projectCost: number,
-  isRural: boolean
+  _isRural?: boolean
 ): GovernmentSchemeItem[] {
   return OFFICIAL_SCHEMES.filter(s => {
     if (s.id === 'micro-finance' && projectCost <= 140000) return true;
     if (s.id === 'term-loan' && projectCost > 140000 && projectCost <= 5000000) return true;
-    if (isRural && s.id === 'pm-fme') return true;
-    return true;
+    return false;
   });
 }

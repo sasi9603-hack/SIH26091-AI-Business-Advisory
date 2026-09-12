@@ -99,7 +99,7 @@ export const App: React.FC = () => {
           />
         )}
 
-        {(activeTab === 'schemes' || activeTab === 'fme') && (
+        {activeTab === 'schemes' && (
           <SchemeMatcher />
         )}
       </main>

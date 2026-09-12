@@ -46,12 +46,12 @@ To deliver accurate hyper-local business advisory without relying on ungrounded 
 
 ---
 
-### 5. Central & State Government Scheme Portals (PMEGP, Mudra, PM-FME)
+### 5. Central & State Government Scheme Portals (SIH26091 Schemes Directory)
 * **Type:** Official Policy Data
-* **Expected Data:** Scheme guidelines, subsidy percentages, eligible project cost limits, mandatory category criteria (SC/ST/OBC/Women/Ex-servicemen/General), nodal banks list.
-* **Why Needed:** Powers the automated government scheme matchmaker engine.
+* **Expected Data:** Scheme guidelines, loan ceilings, margin capital requirements, interest rates, and moratorium terms.
+* **Why Needed:** Powers the automated SIH26091 scheme matchmaker engine.
 * **Possible Limitations:** Scheme rules and subsidy allocations change periodically based on annual government budget updates.
-* **Usage:** Scheme eligibility matching and financial subsidy calculation.
+* **Usage:** Scheme eligibility matching and financial structuring calculation.
 
 ---
 

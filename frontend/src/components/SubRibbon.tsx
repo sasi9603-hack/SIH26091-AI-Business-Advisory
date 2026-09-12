@@ -1,5 +1,5 @@
 import React from 'react';
-import { Layers, MapPin, Calculator, BookOpen, MessageSquareText, FileText, CheckCircle2 } from 'lucide-react';
+import { MapPin, Calculator, BookOpen, MessageSquareText, FileText, CheckCircle2 } from 'lucide-react';
 
 interface SubRibbonProps {
   activeModule: string;
@@ -39,8 +39,8 @@ export const SubRibbon: React.FC<SubRibbonProps> = ({
                 : 'hover:bg-white/15 text-sky-50'
             }`}
           >
-            <MapPin className="w-3.5 h-3.5 text-emerald-300" />
-            <span>Hyper-Local Competitor Map</span>
+            <MapPin className="w-3.5 h-3.5 text-white" />
+            <span>Local Market Map</span>
           </button>
 
           <button
@@ -65,18 +65,6 @@ export const SubRibbon: React.FC<SubRibbonProps> = ({
           >
             <BookOpen className="w-3.5 h-3.5 text-white" />
             <span>Government Schemes</span>
-          </button>
-
-          <button
-            onClick={() => onSelectModule('fme')}
-            className={`px-3 py-2 rounded flex items-center gap-1.5 transition ${
-              activeModule === 'fme'
-                ? 'bg-sbi-indigo text-white font-bold shadow-inner'
-                : 'hover:bg-white/15 text-sky-50'
-            }`}
-          >
-            <Layers className="w-3.5 h-3.5 text-white" />
-            <span>PM-FME &amp; ODOP</span>
           </button>
         </div>
 

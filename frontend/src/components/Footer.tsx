@@ -53,8 +53,6 @@ export const Footer: React.FC = () => {
             <li><a href="https://www.jansamarth.in" target="_blank" rel="noreferrer" className="hover:text-sbi-yellow transition">JanSamarth National Portal</a></li>
             <li><a href="https://msme.gov.in" target="_blank" rel="noreferrer" className="hover:text-sbi-yellow transition">Ministry of MSME (Govt of India)</a></li>
             <li><a href="https://www.sidbi.in" target="_blank" rel="noreferrer" className="hover:text-sbi-yellow transition">SIDBI Micro-Enterprise Financing</a></li>
-            <li><a href="https://pmfme.mofpi.gov.in" target="_blank" rel="noreferrer" className="hover:text-sbi-yellow transition">PM-FME (Food Processing)</a></li>
-            <li><a href="https://pmvishwakarma.gov.in" target="_blank" rel="noreferrer" className="hover:text-sbi-yellow transition">PM Vishwakarma Scheme</a></li>
           </ul>
         </div>
 

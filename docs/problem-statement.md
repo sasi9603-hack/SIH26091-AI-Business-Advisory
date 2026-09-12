@@ -24,7 +24,7 @@ While urban founders leverage sophisticated market research tools, business cons
 * High vulnerability to predatory informal lending due to failure in completing formal bank credit appraisals.
 
 ### 3. Scheme Awareness & Application Friction
-* Central and State governments offer numerous financial aid and subsidy initiatives (such as PMEGP, PM-Mudra Yojana, Stand-Up India, PM-FME).
+* Central and State governments offer financial aid and credit initiatives (such as SIH26091 Micro Finance Scheme and Term Loan Scheme).
 * Information regarding eligibility, subsidy percentages, mandatory documentation, and nodal bank processes remains fragmented and complex for first-time applicants.
 
 ---

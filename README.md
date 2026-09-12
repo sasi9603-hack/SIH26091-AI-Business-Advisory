@@ -12,7 +12,7 @@
 Rural and semi-urban micro-entrepreneurs in India face severe information asymmetry when starting or expanding businesses. They lack access to:
 1. **Hyper-local market data:** Inability to assess local demand, competitor saturation, or unserved customer needs.
 2. **Financial structuring guidance:** Difficulty calculating project feasibility, working capital requirements, ROI, and loan EMI obligations.
-3. **Government scheme awareness:** Fragmented information on government subsidies, grants, and credit-linked schemes (e.g., PMEGP, Mudra, PM-FME, Stand-Up India).
+3. **Government scheme awareness:** Fragmented information on government credit facilities and financing schemes (e.g., SIH26091 Micro Finance and Term Loan schemes).
 
 **SIH26091** aims to bridge this gap by building an AI-powered advisory platform tailored for rural entrepreneurs, integrating geographic intelligence, financial modeling, and automated scheme matching.
 
