@@ -6,8 +6,8 @@ interface AIAssistantChatProps {
   isOpen: boolean;
   onClose: () => void;
   profile: EntrepreneurProfile;
-  report: AdvisoryReport;
-  financials: FinancialBreakdown;
+  report: AdvisoryReport | null;
+  financials: FinancialBreakdown | null;
 }
 
 interface Message {
@@ -27,7 +27,9 @@ export const AIAssistantChat: React.FC<AIAssistantChatProps> = ({
   const [messages, setMessages] = useState<Message[]>([
     {
       sender: 'bot',
-      text: `Namaste! I am your SIH26091 Grounded AI Advisory Assistant. I synthesize verified spatial data, financial calculations, and government scheme rules for ${profile.villageTown} (PIN ${profile.pincode}). How can I assist your business plan today?`,
+      text: profile.pincode 
+        ? `Namaste! I am your SIH26091 Grounded AI Advisory Assistant. I synthesize verified spatial data, financial calculations, and government scheme rules for ${profile.villageTown || 'your area'} (PIN ${profile.pincode}). How can I assist your business plan today?`
+        : `Namaste! I am your SIH26091 Grounded AI Advisory Assistant. Configure your target location and budget in the profile configurator, and I will assist you with verified spatial competition data and government subsidies.`,
       time: 'Just now'
     }
   ]);
@@ -48,7 +50,9 @@ export const AIAssistantChat: React.FC<AIAssistantChatProps> = ({
       let botResponse = '';
       const lower = q.toLowerCase();
 
-      if (lower.includes('subsidy') || lower.includes('pmegp') || lower.includes('margin')) {
+      if (!financials || !report || financials.totalProjectCost <= 0) {
+        botResponse = `Please click "Change Profile" on the top right to configure your target PIN code, business sector, and available equity capital. Once configured, I will calculate the exact subsidy eligibility and financial breakdown.`;
+      } else if (lower.includes('subsidy') || lower.includes('pmegp') || lower.includes('margin')) {
         botResponse = `Under PMEGP guidelines for rural ${profile.socialCategory} category applicants, you are eligible for up to 35% margin money capital subsidy (₹${financials.subsidyAmount.toLocaleString('en-IN')}). Your personal beneficiary equity requirement is only 5% (₹${financials.beneficiaryContributionAmt.toLocaleString('en-IN')}). The application is routed via the District Industries Centre (DIC) on the KVIC portal.`;
       } else if (lower.includes('competition') || lower.includes('competitor') || lower.includes('shops')) {
         botResponse = `Our spatial engine discovered ${report.discoveredCompetitorsCount} existing competitor(s) within a 3km radius of PIN ${profile.pincode}. This represents a ${report.saturationLevel} saturation level (${report.saturationIndex} index). Because local demand is steady, a new shop with modern equipment and prompt turnaround will be viable.`;
@@ -57,7 +61,7 @@ export const AIAssistantChat: React.FC<AIAssistantChatProps> = ({
       } else if (lower.includes('mudra') || lower.includes('pmmy')) {
         botResponse = `Pradhan Mantri Mudra Yojana (PMMY) provides collateral-free working capital and term loans. For your budget level, you fall under the MUDRA KISHORE category (loans between ₹50,000 and ₹5,00,000). You can apply directly through JanSamarth or any commercial bank branch in ${profile.district}.`;
       } else {
-        botResponse = `Based on your profile in ${profile.villageTown}, your current Opportunity Score is ${report.opportunityScore}/100 with a verdict of "${report.verdictLabel}". We recommend applying for PMEGP subsidy to minimize debt load and stocking high-turnover spare parts.`;
+        botResponse = `Based on your profile in ${profile.villageTown || 'your area'}, your current Opportunity Score is ${report.opportunityScore}/100 with a verdict of "${report.verdictLabel}". We recommend applying for PMEGP subsidy to minimize debt load and stocking high-turnover spare parts.`;
       }
 
       setMessages([...newMessages, { sender: 'bot', text: botResponse, time: 'Just now' }]);

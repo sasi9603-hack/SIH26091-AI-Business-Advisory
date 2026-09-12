@@ -217,7 +217,16 @@ export const CompetitorMap: React.FC<CompetitorMapProps> = ({
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 text-slate-700">
-              {filteredCompetitors.map((c) => (
+              {filteredCompetitors.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-4 py-8 text-center text-slate-400">
+                    <MapPin className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+                    <span className="font-semibold block text-sm text-slate-600">No Competitors Recorded in Selected Radius</span>
+                    <span className="text-[11px] block text-slate-400 mt-0.5">Click "+ Add Local Vendor" to submit a community ground-truth observation.</span>
+                  </td>
+                </tr>
+              ) : (
+                filteredCompetitors.map((c) => (
                 <tr key={c.id} className="hover:bg-slate-50 transition">
                   <td className="px-4 py-3 font-semibold text-sbi-navy">{c.name}</td>
                   <td className="px-4 py-3">
@@ -253,7 +262,7 @@ export const CompetitorMap: React.FC<CompetitorMapProps> = ({
                   </td>
                   <td className="px-4 py-3 text-slate-500 truncate max-w-xs">{c.address}</td>
                 </tr>
-              ))}
+              )))}
             </tbody>
           </table>
         </div>

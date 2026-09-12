@@ -40,12 +40,9 @@ export const App: React.FC = () => {
   const handleAddCommunityCompetitor = (newComp: CompetitorBusiness) => {
     const updated = [newComp, ...competitors];
     setCompetitors(updated);
-    // Trigger fresh advisory recalculation
-    fetchAdvisoryEvaluation(profile).then((data) => {
-      setReport({
-        ...data.report,
-        discoveredCompetitorsCount: updated.length
-      });
+    fetchAdvisoryEvaluation(profile, updated).then((data) => {
+      setReport(data.report);
+      setFinancials(data.financials);
     });
   };
 
@@ -74,46 +71,36 @@ export const App: React.FC = () => {
 
       {/* 4. Main Page Container */}
       <main id="main-content" className="flex-1 max-w-7xl w-full mx-auto px-4 py-6">
-        {report && financials ? (
-          <>
-            {activeTab === 'overview' && (
-              <AdvisoryOverview
-                profile={profile}
-                report={report}
-                financials={financials}
-                competitors={competitors}
-                onNavigateTab={setActiveTab}
-                onOpenWizard={() => setIsWizardOpen(true)}
-                onOpenChat={() => setIsChatOpen(true)}
-              />
-            )}
+        {activeTab === 'overview' && (
+          <AdvisoryOverview
+            profile={profile}
+            report={report}
+            financials={financials}
+            competitors={competitors}
+            onNavigateTab={setActiveTab}
+            onOpenWizard={() => setIsWizardOpen(true)}
+            onOpenChat={() => setIsChatOpen(true)}
+          />
+        )}
 
-            {activeTab === 'map' && (
-              <CompetitorMap
-                competitors={competitors}
-                centerLat={16.3067}
-                centerLng={80.4365}
-                locationName={`${profile.villageTown}, PIN ${profile.pincode}`}
-                onOpenAddModal={() => setIsCommunityModalOpen(true)}
-              />
-            )}
+        {activeTab === 'map' && (
+          <CompetitorMap
+            competitors={competitors}
+            centerLat={16.3067}
+            centerLng={80.4365}
+            locationName={profile.pincode ? `${profile.villageTown || 'Target Location'}, PIN ${profile.pincode}` : 'Target Search Area'}
+            onOpenAddModal={() => setIsCommunityModalOpen(true)}
+          />
+        )}
 
-            {activeTab === 'calculator' && (
-              <FinancialCalculator
-                initialFinancials={financials}
-              />
-            )}
+        {activeTab === 'calculator' && (
+          <FinancialCalculator
+            initialFinancials={financials}
+          />
+        )}
 
-            {(activeTab === 'schemes' || activeTab === 'fme') && (
-              <SchemeMatcher />
-            )}
-          </>
-        ) : (
-          <div className="bg-white rounded-xl shadow-sbi p-12 text-center space-y-3">
-            <div className="w-10 h-10 border-4 border-sbi-blue border-t-transparent rounded-full animate-spin mx-auto" />
-            <h3 className="font-bold text-sbi-navy">Analyzing Hyper-Local Data Sources...</h3>
-            <p className="text-xs text-slate-500">Querying UDYAM registry, OpenStreetMap Overpass, and Census databases.</p>
-          </div>
+        {(activeTab === 'schemes' || activeTab === 'fme') && (
+          <SchemeMatcher />
         )}
       </main>
 
@@ -149,15 +136,13 @@ export const App: React.FC = () => {
         centerLng={80.4365}
       />
 
-      {report && financials && (
-        <AIAssistantChat
-          isOpen={isChatOpen}
-          onClose={() => setIsChatOpen(false)}
-          profile={profile}
-          report={report}
-          financials={financials}
-        />
-      )}
+      <AIAssistantChat
+        isOpen={isChatOpen}
+        onClose={() => setIsChatOpen(false)}
+        profile={profile}
+        report={report}
+        financials={financials}
+      />
 
       {/* 5. Indian Banking Portal Footer */}
       <Footer />

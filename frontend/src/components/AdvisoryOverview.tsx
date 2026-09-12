@@ -13,8 +13,8 @@ import {
 
 interface AdvisoryOverviewProps {
   profile: EntrepreneurProfile;
-  report: AdvisoryReport;
-  financials: FinancialBreakdown;
+  report: AdvisoryReport | null;
+  financials: FinancialBreakdown | null;
   competitors: CompetitorBusiness[];
   onNavigateTab: (tab: string) => void;
   onOpenWizard: () => void;
@@ -43,7 +43,7 @@ export const AdvisoryOverview: React.FC<AdvisoryOverviewProps> = ({
         <span className="text-sbi-indigo font-bold">PMMY &amp; PMEGP Rural Enterprise Scheme</span>
         <span>|</span>
         <span className="bg-slate-200 text-slate-700 px-1.5 py-0.5 rounded text-[10px] font-mono">
-          PIN {profile.pincode}
+          {profile.pincode ? `PIN ${profile.pincode}` : 'Location Not Set'}
         </span>
       </div>
 
@@ -136,15 +136,15 @@ export const AdvisoryOverview: React.FC<AdvisoryOverviewProps> = ({
             </div>
             <div>
               <span className="text-slate-500 block">Location:</span>
-              <span className="font-bold text-sbi-navy">{profile.villageTown}, PIN {profile.pincode} ({profile.district})</span>
+              <span className="font-bold text-sbi-navy">{profile.pincode ? `${profile.villageTown || 'Village'}, PIN ${profile.pincode} (${profile.district || 'District'})` : '— Not Set —'}</span>
             </div>
             <div>
               <span className="text-slate-500 block">Proposed Enterprise:</span>
-              <span className="font-bold text-sbi-navy">{CATEGORY_LABELS[profile.category]}</span>
+              <span className="font-bold text-sbi-navy">{CATEGORY_LABELS[profile.category] || '—'}</span>
             </div>
             <div>
               <span className="text-slate-500 block">Equity Budget:</span>
-              <span className="font-bold text-emerald-700">₹{profile.availableCapital.toLocaleString('en-IN')}</span>
+              <span className="font-bold text-emerald-700">{profile.availableCapital > 0 ? `₹${profile.availableCapital.toLocaleString('en-IN')}` : '— Not Set —'}</span>
             </div>
           </div>
         </div>
@@ -256,9 +256,9 @@ export const AdvisoryOverview: React.FC<AdvisoryOverviewProps> = ({
 
             {activeSideSubTab === 'stories' && (
               <div className="space-y-3 text-xs sm:text-sm pt-2 bg-slate-50 p-4 rounded-lg border border-slate-200">
-                <h4 className="font-bold text-sbi-navy text-sm">Field Success Stories (Guntur &amp; Krishna Districts):</h4>
+                <h4 className="font-bold text-sbi-navy text-sm">Beneficiary Case Studies &amp; Field Reports:</h4>
                 <p className="text-slate-600">
-                  Over 1,200 micro-entrepreneurs in agro-machinery repair and rural tailoring secured PMEGP and Mudra credit in Andhra Pradesh during 2025, maintaining a 94% timely repayment rate.
+                  Verified beneficiary case studies and local enterprise milestones will be displayed here from the District Industries Centre (DIC) database.
                 </p>
               </div>
             )}
@@ -275,13 +275,15 @@ export const AdvisoryOverview: React.FC<AdvisoryOverviewProps> = ({
                   {/* Verdict Badge */}
                   <div className="flex items-center gap-2">
                     <span className={`px-3 py-1 rounded-full text-xs font-extrabold uppercase shadow-sm ${
-                      report.verdict === 'START'
-                        ? 'bg-emerald-600 text-white'
-                        : report.verdict === 'CONSIDER'
-                        ? 'bg-amber-500 text-white'
-                        : 'bg-rose-600 text-white'
+                      report && profile.availableCapital > 0
+                        ? report.verdict === 'START'
+                          ? 'bg-emerald-600 text-white'
+                          : report.verdict === 'CONSIDER'
+                          ? 'bg-amber-500 text-white'
+                          : 'bg-rose-600 text-white'
+                        : 'bg-slate-400 text-white'
                     }`}>
-                      {report.verdictLabel}
+                      {report && profile.availableCapital > 0 ? report.verdictLabel : 'AWAITING PROFILE INPUT'}
                     </span>
                   </div>
                 </div>
@@ -290,24 +292,35 @@ export const AdvisoryOverview: React.FC<AdvisoryOverviewProps> = ({
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
                   <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-2xs">
                     <span className="text-[10px] text-slate-500 font-semibold block">Opportunity Score</span>
-                    <span className="text-2xl font-black text-sbi-indigo">{report.opportunityScore}<span className="text-xs text-slate-400 font-normal">/100</span></span>
+                    <span className="text-2xl font-black text-sbi-indigo">
+                      {report && profile.availableCapital > 0 ? report.opportunityScore : '—'}
+                      <span className="text-xs text-slate-400 font-normal">/100</span>
+                    </span>
                   </div>
 
                   <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-2xs">
                     <span className="text-[10px] text-slate-500 font-semibold block">Competition Density</span>
-                    <span className="text-sm font-bold text-slate-800 block mt-1">{report.saturationLevel}</span>
-                    <span className="text-[10px] text-emerald-600 font-medium">({report.discoveredCompetitorsCount} in 3km)</span>
+                    <span className="text-sm font-bold text-slate-800 block mt-1">
+                      {report && profile.availableCapital > 0 ? report.saturationLevel : '—'}
+                    </span>
+                    <span className="text-[10px] text-slate-500 font-medium">
+                      ({competitors.length} in radius)
+                    </span>
                   </div>
 
                   <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-2xs">
                     <span className="text-[10px] text-slate-500 font-semibold block">Estimated Project Cost</span>
-                    <span className="text-sm font-bold text-slate-800 block mt-1">₹{financials.totalProjectCost.toLocaleString('en-IN')}</span>
+                    <span className="text-sm font-bold text-slate-800 block mt-1">
+                      {financials && financials.totalProjectCost > 0 ? `₹${financials.totalProjectCost.toLocaleString('en-IN')}` : '—'}
+                    </span>
                     <span className="text-[10px] text-sbi-blue font-medium">(PMEGP Cap)</span>
                   </div>
 
                   <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-2xs">
                     <span className="text-[10px] text-slate-500 font-semibold block">Monthly EMI</span>
-                    <span className="text-sm font-bold text-emerald-700 block mt-1">~₹{financials.monthlyEmi.toLocaleString('en-IN')}</span>
+                    <span className="text-sm font-bold text-emerald-700 block mt-1">
+                      {financials && financials.monthlyEmi > 0 ? `~₹${financials.monthlyEmi.toLocaleString('en-IN')}` : '—'}
+                    </span>
                     <span className="text-[10px] text-slate-400 font-medium">(60 Months)</span>
                   </div>
                 </div>
@@ -318,7 +331,12 @@ export const AdvisoryOverview: React.FC<AdvisoryOverviewProps> = ({
                     <Sparkles className="w-3.5 h-3.5 text-sbi-blue" />
                     <span>Evidence-Based Advisory Assessment:</span>
                   </div>
-                  <p>{report.aiNarrative}</p>
+                  <p>
+                    {report && profile.availableCapital > 0 
+                      ? report.aiNarrative 
+                      : 'No advisory evaluation performed yet. Please click "Change Profile" above to enter your target postal PIN code, proposed business trade, and available equity capital.'
+                    }
+                  </p>
                   {competitors.length > 0 && (
                     <div className="text-[11px] text-slate-500 pt-1 border-t border-slate-100 flex items-center justify-between">
                       <span>Nearest Competitor: <strong className="text-sbi-navy">{competitors[0].name}</strong> ({competitors[0].distanceKm} km)</span>
