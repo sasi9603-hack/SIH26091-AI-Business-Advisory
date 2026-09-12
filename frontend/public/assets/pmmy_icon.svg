@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <!-- Circular container -->
+  <circle cx="50" cy="50" r="46" fill="#F0F9FF" stroke="#0099DB" stroke-width="2.5"/>
+  <!-- Hands nurturing growth -->
+  <path d="M 28 68 C 36 60, 44 62, 50 68 C 56 62, 64 60, 72 68" fill="none" stroke="#23005A" stroke-width="3" stroke-linecap="round"/>
+  <!-- Sprout Stem -->
+  <line x1="50" y1="65" x2="50" y2="40" stroke="#00875A" stroke-width="3.5" stroke-linecap="round"/>
+  <!-- Left Leaf -->
+  <path d="M 50 48 C 40 45, 34 35, 42 32 C 48 35, 49 43, 50 48 Z" fill="#10B981"/>
+  <!-- Right Leaf -->
+  <path d="M 50 42 C 60 39, 66 29, 58 26 C 52 29, 51 37, 50 42 Z" fill="#10B981"/>
+  <!-- Rupee Coin Icon -->
+  <circle cx="50" cy="22" r="9" fill="#FFD200" stroke="#E5A900" stroke-width="1.5"/>
+  <text x="50" y="26" font-family="'Segoe UI', Arial" font-weight="bold" font-size="10" fill="#23005A" text-anchor="middle">₹</text>
+</svg>
