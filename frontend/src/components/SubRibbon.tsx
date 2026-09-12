@@ -1,5 +1,5 @@
 import React from 'react';
-import { Calculator, BookOpen, MessageSquareText, CheckCircle2 } from 'lucide-react';
+import { Calculator, BookOpen, MessageSquareText, CheckCircle2, TrendingUp } from 'lucide-react';
 
 interface SubRibbonProps {
   activeModule: string;
@@ -27,6 +27,18 @@ export const SubRibbon: React.FC<SubRibbonProps> = ({
           >
             <CheckCircle2 className="w-3.5 h-3.5 text-sbi-yellow" />
             <span>SIH26091 Scheme Advisory</span>
+          </button>
+
+          <button
+            onClick={() => onSelectModule('market')}
+            className={`px-3 py-2 rounded flex items-center gap-1.5 transition ${
+              activeModule === 'market'
+                ? 'bg-sbi-indigo text-white font-bold shadow-inner'
+                : 'hover:bg-white/15 text-sky-50'
+            }`}
+          >
+            <TrendingUp className="w-3.5 h-3.5 text-emerald-300" />
+            <span>Local Demand &amp; Feasibility</span>
           </button>
 
           <button

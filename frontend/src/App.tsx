@@ -3,6 +3,7 @@ import { TopUtilityBar } from './components/TopUtilityBar';
 import { MainHeader } from './components/MainHeader';
 import { SubRibbon } from './components/SubRibbon';
 import { AdvisoryOverview } from './components/AdvisoryOverview';
+import { MarketFeasibilityAnalyzer } from './components/MarketFeasibilityAnalyzer';
 import { FinancialCalculator } from './components/FinancialCalculator';
 import { SchemeMatcher } from './components/SchemeMatcher';
 import { InputWizard } from './components/InputWizard';
@@ -67,6 +68,15 @@ export const App: React.FC = () => {
             onNavigateTab={setActiveTab}
             onOpenWizard={() => setIsWizardOpen(true)}
             onOpenChat={() => setIsChatOpen(true)}
+          />
+        )}
+
+        {activeTab === 'market' && (
+          <MarketFeasibilityAnalyzer
+            profile={profile}
+            financials={financials}
+            onNavigateTab={setActiveTab}
+            onOpenWizard={() => setIsWizardOpen(true)}
           />
         )}
 
