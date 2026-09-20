@@ -131,18 +131,35 @@ export const MarketFeasibilityAnalyzer: React.FC<MarketFeasibilityAnalyzerProps>
       </div>
 
       {/* 2. Interactive Hyper-Local Competitor & Spatial Density Map */}
-      <CompetitorMap
-        centerLat={profile.lat || 16.3067}
-        centerLng={profile.lng || 80.4365}
-        radiusKm={profile.radiusKm || 3.0}
-        competitors={competitors}
-        locationLabel={locationText}
-        categoryLabel={tradeLabel}
-        disclaimer={disclaimer}
-        isLoading={loading}
-        onRadiusChange={onRadiusChange}
-        onOpenReportModal={onOpenReportModal}
-      />
+      {profile.lat !== undefined && profile.lng !== undefined ? (
+        <CompetitorMap
+          centerLat={profile.lat}
+          centerLng={profile.lng}
+          radiusKm={profile.radiusKm || 3.0}
+          competitors={competitors}
+          locationLabel={locationText}
+          categoryLabel={tradeLabel}
+          disclaimer={disclaimer}
+          isLoading={loading}
+          onRadiusChange={onRadiusChange}
+          onOpenReportModal={onOpenReportModal}
+        />
+      ) : (
+        <div className="bg-white rounded-xl border border-dashed border-slate-300 p-8 text-center space-y-3">
+          <MapPin className="w-8 h-8 text-sbi-blue mx-auto" />
+          <h3 className="text-sm font-bold text-slate-700">Location Not Yet Geocoded</h3>
+          <p className="text-xs text-slate-500 max-w-md mx-auto">
+            Please enter your State, District, and Village/Town in the Setup Wizard to view the interactive Google Map and nearby competitors.
+          </p>
+          <button
+            onClick={onOpenWizard}
+            className="bg-sbi-blue text-white px-4 py-1.5 rounded-lg text-xs font-bold hover:bg-blue-700 transition inline-flex items-center gap-1.5 shadow-sm"
+          >
+            <span>Set Enterprise Location</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
 
       {/* 3. Top Metric Cards Grid (Real Transparent Indicators) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

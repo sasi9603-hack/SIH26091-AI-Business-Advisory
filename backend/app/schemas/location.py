@@ -18,9 +18,11 @@ class GeocodeResponse(BaseModel):
     display_name: str
     village_town: str
     block: Optional[str] = None
+    mandal: Optional[str] = None
     district: str
     state: str
     pincode: str
     formatted_address: str
     is_approximate: bool = False
+    confidence: Optional[float] = 1.0
     bounding_box: Optional[List[float]] = None

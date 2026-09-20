@@ -81,7 +81,7 @@ async def geocode_with_google(
             search_queries.append(c_term)
 
     if not search_queries:
-        search_queries = ["Guntur, Andhra Pradesh, India"]
+        return None
 
     try:
         async with httpx.AsyncClient(timeout=5.0) as client:

@@ -35,7 +35,7 @@ class Settings(BaseSettings):
     # External APIs (Open Data / Overpass / Nominatim)
     OVERPASS_API_URL: str = "https://overpass-api.de/api/interpreter"
     NOMINATIM_GEOCODE_URL: str = "https://nominatim.openstreetmap.org/search"
-    GEOCODING_USER_AGENT: str = "SIH26091-Rural-Business-Advisory/1.0"
+    GEOCODING_USER_AGENT: str = "SIH26091-Rural-Business-Advisory/1.0 (contact: admin@sih26091.gov.in)"
     
     # Census & Open Government Data (data.gov.in)
     DATA_GOV_IN_API_KEY: str = ""

@@ -7,8 +7,8 @@ import { submitCommunityReport } from '../services/api';
 interface CommunityReportModalProps {
   isOpen: boolean;
   onClose: () => void;
-  defaultLat: number;
-  defaultLng: number;
+  defaultLat?: number;
+  defaultLng?: number;
   defaultCategory: BusinessCategory;
   onSuccess: () => void;
 }
@@ -32,6 +32,10 @@ export const CommunityReportModal: React.FC<CommunityReportModalProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!businessName.trim() || !address.trim()) return;
+    if (defaultLat === undefined || defaultLng === undefined) {
+      alert("Please configure and verify your business location in the wizard first.");
+      return;
+    }
 
     setSubmitting(true);
     const ok = await submitCommunityReport({
@@ -108,10 +112,17 @@ export const CommunityReportModal: React.FC<CommunityReportModalProps> = ({
             />
           </div>
 
-          <div className="bg-sky-50 border border-sky-200 p-2.5 rounded text-[11px] text-slate-600 flex items-center gap-1.5">
-            <MapPin className="w-4 h-4 text-sbi-blue shrink-0" />
-            <span>Tagging at coordinates: <strong>{defaultLat.toFixed(4)}, {defaultLng.toFixed(4)}</strong></span>
-          </div>
+          {defaultLat !== undefined && defaultLng !== undefined ? (
+            <div className="bg-sky-50 border border-sky-200 p-2.5 rounded text-[11px] text-slate-600 flex items-center gap-1.5">
+              <MapPin className="w-4 h-4 text-sbi-blue shrink-0" />
+              <span>Tagging at coordinates: <strong>{defaultLat.toFixed(4)}, {defaultLng.toFixed(4)}</strong></span>
+            </div>
+          ) : (
+            <div className="bg-amber-50 border border-amber-200 p-2.5 rounded text-[11px] text-amber-800 flex items-center gap-1.5">
+              <MapPin className="w-4 h-4 text-amber-600 shrink-0" />
+              <span>Location not set. Please set and verify your location in the Setup Wizard.</span>
+            </div>
+          )}
 
           {successMsg && (
             <div className="bg-emerald-50 border border-emerald-300 text-emerald-800 p-2 rounded text-center font-semibold">

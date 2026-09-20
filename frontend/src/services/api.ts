@@ -10,7 +10,10 @@ import {
 } from '../types';
 import { calculateFinancials } from './financialEngine';
 
-const rawApiBase = (import.meta as any).env?.VITE_API_BASE_URL || '';
+const rawApiBase = (import.meta as any).env?.VITE_API_BASE_URL || 
+  (typeof window !== 'undefined' && window.location.hostname.includes('vercel.app') 
+    ? 'https://sih26091-ai-business-advisory.onrender.com' 
+    : '');
 export const API_BASE = typeof rawApiBase === 'string' ? rawApiBase.replace(/\/+$/, '') : '';
 
 export async function apiFetch(path: string, options: RequestInit = {}, timeoutMs: number = 20000): Promise<Response> {
@@ -220,28 +223,21 @@ export async function geocodeLocation(params: {
         longitude: data.longitude,
         displayName: data.display_name,
         villageTown: data.village_town,
-        block: data.block,
+        block: data.block || data.mandal,
         district: data.district,
         state: data.state,
         pincode: data.pincode,
         formattedAddress: data.formatted_address,
-        isApproximate: data.is_approximate
+        isApproximate: data.is_approximate || false
       };
     }
-  } catch (err) {
-    console.warn('Geocoding request error:', err);
+    const errorData = await res.json().catch(() => ({}));
+    const message = errorData.detail || 'Could not verify this location. Please check the village, mandal, district, state and PIN code.';
+    throw new Error(message);
+  } catch (err: any) {
+    console.error('Geocoding request failed:', err);
+    throw new Error(err.message || 'Could not verify this location. Please check the village, mandal, district, state and PIN code.');
   }
-  return {
-    latitude: 16.3067,
-    longitude: 80.4365,
-    displayName: `${params.villageTown || params.district || 'Guntur'}, Andhra Pradesh`,
-    villageTown: params.villageTown || 'Guntur',
-    district: params.district || 'Guntur',
-    state: params.state || 'Andhra Pradesh',
-    pincode: params.pincode || '522002',
-    formattedAddress: `${params.villageTown || 'Guntur'}, ${params.district || 'Guntur'}, Andhra Pradesh`,
-    isApproximate: true
-  };
 }
 
 export async function searchNearbyCompetitors(

@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { EntrepreneurProfile, BusinessCategory } from '../types';
 import { CATEGORY_LABELS } from '../services/mockData';
 import { evaluateSIHScheme } from '../services/sihSchemes';
 import { geocodeLocation } from '../services/api';
-import { X, Check, MapPin, IndianRupee, Building2, Compass, Loader2 } from 'lucide-react';
+import { X, Check, MapPin, IndianRupee, Building2, Compass, Loader2, AlertCircle } from 'lucide-react';
 
 interface InputWizardProps {
   isOpen: boolean;
@@ -20,16 +20,41 @@ export const InputWizard: React.FC<InputWizardProps> = ({
 }) => {
   const [profile, setProfile] = useState<EntrepreneurProfile>(currentProfile);
   const [isGeocoding, setIsGeocoding] = useState<boolean>(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [resolvedAddress, setResolvedAddress] = useState<string>(
     currentProfile.lat && currentProfile.lng 
       ? `${currentProfile.villageTown || currentProfile.district} [${currentProfile.lat.toFixed(4)}°N, ${currentProfile.lng.toFixed(4)}°E]`
       : ''
   );
 
+  useEffect(() => {
+    if (isOpen) {
+      setProfile(currentProfile);
+      setResolvedAddress(
+        currentProfile.lat && currentProfile.lng 
+          ? `${currentProfile.villageTown || currentProfile.district} [${currentProfile.lat.toFixed(4)}°N, ${currentProfile.lng.toFixed(4)}°E]`
+          : ''
+      );
+      setErrorMessage(null);
+    }
+  }, [isOpen, currentProfile]);
+
   if (!isOpen) return null;
+
+  const handleLocationChange = (field: keyof EntrepreneurProfile, value: string) => {
+    setProfile((prev) => ({
+      ...prev,
+      [field]: value,
+      lat: undefined,
+      lng: undefined
+    }));
+    setResolvedAddress('');
+    setErrorMessage(null);
+  };
 
   const handleResolveCoordinates = async () => {
     setIsGeocoding(true);
+    setErrorMessage(null);
     try {
       const geo = await geocodeLocation({
         villageTown: profile.villageTown,
@@ -43,13 +68,17 @@ export const InputWizard: React.FC<InputWizardProps> = ({
         lat: geo.latitude,
         lng: geo.longitude,
         villageTown: geo.villageTown || prev.villageTown,
+        block: geo.block || prev.block,
         district: geo.district || prev.district,
         state: geo.state || prev.state,
         pincode: geo.pincode || prev.pincode
       }));
       setResolvedAddress(`${geo.displayName || geo.formattedAddress} (${geo.latitude.toFixed(4)}°N, ${geo.longitude.toFixed(4)}°E)`);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Geocoding error:', err);
+      setErrorMessage(err.message || 'Could not verify this location. Please check the village, mandal, district, state and PIN code.');
+      setProfile((prev) => ({ ...prev, lat: undefined, lng: undefined }));
+      setResolvedAddress('');
     } finally {
       setIsGeocoding(false);
     }
@@ -58,34 +87,52 @@ export const InputWizard: React.FC<InputWizardProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsGeocoding(true);
+    setErrorMessage(null);
 
     try {
-      // 1. Resolve geographic coordinates via real geocode API
-      const geo = await geocodeLocation({
-        villageTown: profile.villageTown,
-        block: profile.block,
-        district: profile.district,
-        state: profile.state,
-        pincode: profile.pincode
-      });
+      let lat = profile.lat;
+      let lng = profile.lng;
+      let vTown = profile.villageTown;
+      let dName = profile.district;
+      let sName = profile.state;
+      let pCode = profile.pincode;
+      let bName = profile.block;
+
+      // If coordinates are not yet resolved or location changed, geocode now
+      if (lat === undefined || lng === undefined) {
+        const geo = await geocodeLocation({
+          villageTown: profile.villageTown,
+          block: profile.block,
+          district: profile.district,
+          state: profile.state,
+          pincode: profile.pincode
+        });
+        lat = geo.latitude;
+        lng = geo.longitude;
+        vTown = geo.villageTown || profile.villageTown;
+        dName = geo.district || profile.district;
+        sName = geo.state || profile.state;
+        pCode = geo.pincode || profile.pincode;
+        bName = geo.block || profile.block;
+      }
 
       const updated: EntrepreneurProfile = {
         ...profile,
-        lat: geo.latitude,
-        lng: geo.longitude,
-        villageTown: geo.villageTown || profile.villageTown,
-        district: geo.district || profile.district,
-        state: geo.state || profile.state,
-        pincode: geo.pincode || profile.pincode,
+        lat,
+        lng,
+        villageTown: vTown,
+        district: dName,
+        block: bName,
+        state: sName,
+        pincode: pCode,
         radiusKm: profile.radiusKm || 3.0
       };
 
       onSaveProfile(updated);
       onClose();
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error saving profile:', err);
-      onSaveProfile(profile);
-      onClose();
+      setErrorMessage(err.message || 'Could not verify this location. Please check the village, mandal, district, state and PIN code.');
     } finally {
       setIsGeocoding(false);
     }
@@ -128,14 +175,25 @@ export const InputWizard: React.FC<InputWizardProps> = ({
               </span>
             </div>
 
+            {/* Error Message Alert */}
+            {errorMessage && (
+              <div className="bg-rose-50 border border-rose-300 text-rose-800 rounded-lg p-3 text-xs flex items-start gap-2 animate-in fade-in">
+                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                <div className="space-y-0.5">
+                  <span className="font-bold">Location Verification Error:</span>
+                  <p>{errorMessage}</p>
+                </div>
+              </div>
+            )}
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-semibold text-slate-600 mb-1">State *</label>
                 <input
                   type="text"
                   value={profile.state || ''}
-                  onChange={(e) => setProfile({ ...profile, state: e.target.value })}
-                  placeholder="e.g. Maharashtra, UP, Karnataka, AP"
+                  onChange={(e) => handleLocationChange('state', e.target.value)}
+                  placeholder="e.g. Telangana, Maharashtra, UP, AP"
                   className="w-full bg-white border border-slate-300 rounded px-3 py-1.5 text-sm focus:border-sbi-blue focus:outline-none"
                   required
                 />
@@ -146,8 +204,8 @@ export const InputWizard: React.FC<InputWizardProps> = ({
                 <input
                   type="text"
                   value={profile.district || ''}
-                  onChange={(e) => setProfile({ ...profile, district: e.target.value })}
-                  placeholder="e.g. Pune, Varanasi, YSR Kadapa"
+                  onChange={(e) => handleLocationChange('district', e.target.value)}
+                  placeholder="e.g. Yadadri Bhuvanagiri, Pune, Varanasi"
                   className="w-full bg-white border border-slate-300 rounded px-3 py-1.5 text-sm focus:border-sbi-blue focus:outline-none"
                   required
                 />
@@ -158,8 +216,8 @@ export const InputWizard: React.FC<InputWizardProps> = ({
                 <input
                   type="text"
                   value={profile.block || ''}
-                  onChange={(e) => setProfile({ ...profile, block: e.target.value })}
-                  placeholder="e.g. Haveli, Pulivendla, Tenali"
+                  onChange={(e) => handleLocationChange('block', e.target.value)}
+                  placeholder="e.g. Yadadri Bhuvanagiri, Haveli, Tenali"
                   className="w-full bg-white border border-slate-300 rounded px-3 py-1.5 text-sm focus:border-sbi-blue focus:outline-none"
                 />
               </div>
@@ -169,8 +227,8 @@ export const InputWizard: React.FC<InputWizardProps> = ({
                 <input
                   type="text"
                   value={profile.villageTown || ''}
-                  onChange={(e) => setProfile({ ...profile, villageTown: e.target.value })}
-                  placeholder="e.g. Pulivendula, Baramati, Tenali, Sarnath"
+                  onChange={(e) => handleLocationChange('villageTown', e.target.value)}
+                  placeholder="e.g. Yadadri Bhuvanagiri, Baramati, Tenali"
                   className="w-full bg-white border border-slate-300 rounded px-3 py-1.5 text-sm focus:border-sbi-blue focus:outline-none"
                   required
                 />
@@ -181,8 +239,8 @@ export const InputWizard: React.FC<InputWizardProps> = ({
                 <input
                   type="text"
                   value={profile.pincode || ''}
-                  onChange={(e) => setProfile({ ...profile, pincode: e.target.value })}
-                  placeholder="e.g. 516390, 413102, 522201"
+                  onChange={(e) => handleLocationChange('pincode', e.target.value)}
+                  placeholder="e.g. 508116, 413102, 522201"
                   className="w-full bg-white border border-slate-300 rounded px-3 py-1.5 text-sm focus:border-sbi-blue focus:outline-none"
                 />
               </div>

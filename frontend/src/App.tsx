@@ -40,36 +40,39 @@ export const App: React.FC = () => {
       }
     });
 
-    const lat = profile.lat || 16.3067;
-    const lng = profile.lng || 80.4365;
-    searchNearbyCompetitors(lat, lng, profile.category, profile.radiusKm || 3.0).then((res) => {
-      if (res.businesses) {
-        setCompetitors(res.businesses);
-      }
-      setMapDisclaimer(res.disclaimer);
-    });
+    if (profile.lat !== undefined && profile.lng !== undefined) {
+      searchNearbyCompetitors(profile.lat, profile.lng, profile.category, profile.radiusKm || 3.0).then((res) => {
+        if (res.businesses) {
+          setCompetitors(res.businesses);
+        }
+        setMapDisclaimer(res.disclaimer);
+      });
+    } else {
+      setCompetitors([]);
+      setMapDisclaimer('');
+    }
   }, [profile]);
 
   const handleRadiusChange = async (newRadius: number) => {
     const updated = { ...profile, radiusKm: newRadius };
     setProfile(updated);
-    const lat = profile.lat || 16.3067;
-    const lng = profile.lng || 80.4365;
-    const res = await searchNearbyCompetitors(lat, lng, profile.category, newRadius);
-    if (res.businesses) {
-      setCompetitors(res.businesses);
+    if (profile.lat !== undefined && profile.lng !== undefined) {
+      const res = await searchNearbyCompetitors(profile.lat, profile.lng, profile.category, newRadius);
+      if (res.businesses) {
+        setCompetitors(res.businesses);
+      }
+      setMapDisclaimer(res.disclaimer);
     }
-    setMapDisclaimer(res.disclaimer);
   };
 
   const refreshCompetitors = async () => {
-    const lat = profile.lat || 16.3067;
-    const lng = profile.lng || 80.4365;
-    const res = await searchNearbyCompetitors(lat, lng, profile.category, profile.radiusKm || 3.0);
-    if (res.businesses) {
-      setCompetitors(res.businesses);
+    if (profile.lat !== undefined && profile.lng !== undefined) {
+      const res = await searchNearbyCompetitors(profile.lat, profile.lng, profile.category, profile.radiusKm || 3.0);
+      if (res.businesses) {
+        setCompetitors(res.businesses);
+      }
+      setMapDisclaimer(res.disclaimer);
     }
-    setMapDisclaimer(res.disclaimer);
   };
 
   return (
@@ -159,8 +162,8 @@ export const App: React.FC = () => {
       <CommunityReportModal
         isOpen={isReportModalOpen}
         onClose={() => setIsReportModalOpen(false)}
-        defaultLat={profile.lat || 16.3067}
-        defaultLng={profile.lng || 80.4365}
+        defaultLat={profile.lat}
+        defaultLng={profile.lng}
         defaultCategory={profile.category}
         onSuccess={refreshCompetitors}
       />

@@ -116,9 +116,102 @@ def test_community_report_integration():
     assert "Sri Sai Local Tailoring Shop" in names
     print("[PASS] test_community_report_integration -> Community report found in search results!")
 
+def test_geocoding_required_test_cases():
+    """Verify all 5 required test cases from user specification."""
+    # TEST 1: Yadadri Bhuvanagiri, Telangana (PIN 508116)
+    r1 = client.post("/api/location/geocode", json={
+        "state": "Telangana",
+        "district": "Yadadri Bhuvanagiri",
+        "mandal": "Yadadri Bhuvanagiri",
+        "villageTown": "Yadadri Bhuvanagiri",
+        "pincode": "508116"
+    })
+    assert r1.status_code == 200, f"Test 1 failed: {r1.text}"
+    d1 = r1.json()
+    assert 17.40 <= d1["latitude"] <= 17.60, f"Test 1 lat out of range: {d1['latitude']}"
+    assert 78.80 <= d1["longitude"] <= 79.00, f"Test 1 lng out of range: {d1['longitude']}"
+    assert "telangana" in d1["state"].lower()
+    assert "andhra pradesh" not in d1["state"].lower()
+    print(f"\n[PASS] TEST 1: Yadadri Bhuvanagiri -> Lat: {d1['latitude']}, Lng: {d1['longitude']}, State: {d1['state']}")
+
+    # TEST 2: Hyderabad, Telangana (PIN 500001)
+    r2 = client.post("/api/location/geocode", json={
+        "state": "Telangana",
+        "district": "Hyderabad",
+        "mandal": "Hyderabad",
+        "villageTown": "Abids",
+        "pincode": "500001"
+    })
+    assert r2.status_code == 200, f"Test 2 failed: {r2.text}"
+    d2 = r2.json()
+    assert 17.30 <= d2["latitude"] <= 17.50, f"Test 2 lat out of range: {d2['latitude']}"
+    assert 78.40 <= d2["longitude"] <= 78.60, f"Test 2 lng out of range: {d2['longitude']}"
+    assert "telangana" in d2["state"].lower()
+    print(f"[PASS] TEST 2: Hyderabad -> Lat: {d2['latitude']}, Lng: {d2['longitude']}, State: {d2['state']}")
+
+    # TEST 3: Vijayawada, Andhra Pradesh (PIN 520001)
+    r3 = client.post("/api/location/geocode", json={
+        "state": "Andhra Pradesh",
+        "district": "NTR",
+        "mandal": "Vijayawada",
+        "villageTown": "Vijayawada",
+        "pincode": "520001"
+    })
+    assert r3.status_code == 200, f"Test 3 failed: {r3.text}"
+    d3 = r3.json()
+    assert 16.45 <= d3["latitude"] <= 16.60, f"Test 3 lat out of range: {d3['latitude']}"
+    assert 80.55 <= d3["longitude"] <= 80.70, f"Test 3 lng out of range: {d3['longitude']}"
+    assert "andhra pradesh" in d3["state"].lower()
+    print(f"[PASS] TEST 3: Vijayawada -> Lat: {d3['latitude']}, Lng: {d3['longitude']}, State: {d3['state']}")
+
+    # TEST 4: Guntur, Andhra Pradesh (PIN 522001)
+    r4 = client.post("/api/location/geocode", json={
+        "state": "Andhra Pradesh",
+        "district": "Guntur",
+        "mandal": "Guntur",
+        "villageTown": "Guntur",
+        "pincode": "522001"
+    })
+    assert r4.status_code == 200, f"Test 4 failed: {r4.text}"
+    d4 = r4.json()
+    assert 16.20 <= d4["latitude"] <= 16.40, f"Test 4 lat out of range: {d4['latitude']}"
+    assert 80.35 <= d4["longitude"] <= 80.55, f"Test 4 lng out of range: {d4['longitude']}"
+    assert "andhra pradesh" in d4["state"].lower()
+    print(f"[PASS] TEST 4: Guntur -> Lat: {d4['latitude']}, Lng: {d4['longitude']}, State: {d4['state']}")
+
+    # TEST 5: Rural Telangana village (Gajwel, Siddipet, PIN 502278)
+    r5 = client.post("/api/location/geocode", json={
+        "state": "Telangana",
+        "district": "Siddipet",
+        "mandal": "Gajwel",
+        "villageTown": "Gajwel",
+        "pincode": "502278"
+    })
+    assert r5.status_code == 200, f"Test 5 failed: {r5.text}"
+    d5 = r5.json()
+    assert 17.75 <= d5["latitude"] <= 17.95, f"Test 5 lat out of range: {d5['latitude']}"
+    assert 78.55 <= d5["longitude"] <= 78.80, f"Test 5 lng out of range: {d5['longitude']}"
+    assert "telangana" in d5["state"].lower()
+    print(f"[PASS] TEST 5: Gajwel, Siddipet -> Lat: {d5['latitude']}, Lng: {d5['longitude']}, State: {d5['state']}")
+
+def test_invalid_location_returns_404_no_fallback():
+    """Verify that unverified / mismatched locations return explicit 404 without silent fallback to Guntur."""
+    resp = client.post("/api/location/geocode", json={
+        "state": "Telangana",
+        "district": "FakeNonExistentDistrictXYZ999",
+        "villageTown": "NonExistentVillageXYZ999",
+        "pincode": "999999"
+    })
+    assert resp.status_code == 404, f"Expected 404 for invalid location, got: {resp.status_code}"
+    err_detail = resp.json()["detail"]
+    assert "Could not verify this location" in err_detail
+    print(f"\n[PASS] test_invalid_location_returns_404_no_fallback -> Correctly rejected with 404: '{err_detail}'")
+
 if __name__ == "__main__":
     test_geocode_structured_location()
     test_geocode_pincode()
+    test_geocoding_required_test_cases()
+    test_invalid_location_returns_404_no_fallback()
     test_competitor_search_bakery()
     test_competitor_search_grocery()
     test_competitor_search_pharmacy_and_clothing()
