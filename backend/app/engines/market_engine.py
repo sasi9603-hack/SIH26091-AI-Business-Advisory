@@ -328,9 +328,9 @@ async def analyze_hyperlocal_market(
         nearest_competitor_name=nearest_name,
         competitor_density_per_sq_km=competitor_density,
         density_formula=density_formula,
-        source="OpenStreetMap Overpass API & PostgreSQL Businesses Registry",
-        data_freshness="LIVE_OSM_QUERY",
-        disclaimer=f"Reflects mapped businesses within {radius_km} km. Informal unmapped rural stalls are not captured in digital maps."
+        source="Google Maps & Places API & PostgreSQL Businesses Registry",
+        data_freshness="LIVE_GOOGLE_MAPS_QUERY",
+        disclaimer=f"Reflects mapped businesses within {radius_km} km. Informal unmapped rural stalls may require community ground-truthing."
     )
 
     # 4. Fetch Census Demographics (Zero Fabrication, Explicit Non-Demand Caveat)

@@ -88,7 +88,7 @@ def test_step_06_to_08_competitors_search_osm_bakery():
     assert "radius_km" in data
     assert data["radius_km"] == 3.0
     assert "disclaimer" in data
-    assert "OpenStreetMap" in data["disclaimer"]
+    assert ("Google Maps" in data["disclaimer"] or "OpenStreetMap" in data["disclaimer"])
 
     # Verify each competitor marker structure for map rendering
     for biz in data["businesses"]:
@@ -99,7 +99,8 @@ def test_step_06_to_08_competitors_search_osm_bakery():
         dist = biz.get("distanceKm", biz.get("distance_km", 0))
         assert dist <= 3.5  # within search buffer
         assert "source" in biz
-        assert biz["source"] in ["OSM", "OPENSTREETMAP", "UDYAM", "COMMUNITY"]
+        assert biz["source"] in ["GOOGLE_MAPS", "OSM", "OPENSTREETMAP", "UDYAM", "COMMUNITY"]
+        assert ("google_maps_url" in biz or "googleMapsUrl" in biz)
 
 
 def test_step_09_market_analysis_distance_rings_and_density():

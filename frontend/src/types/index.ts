@@ -32,13 +32,14 @@ export interface CompetitorBusiness {
   id: string;
   name: string;
   category: string;
-  source: 'UDYAM' | 'OPENSTREETMAP' | 'COMMUNITY';
+  source: 'GOOGLE_MAPS' | 'OPENSTREETMAP' | 'UDYAM' | 'COMMUNITY';
   confidenceScore: number;
   verificationStatus: 'VERIFIED' | 'UNVERIFIED';
   distanceKm: number;
   lat: number;
   lng: number;
   address: string;
+  googleMapsUrl?: string;
   reportedDate?: string;
   upvotes?: number;
 }

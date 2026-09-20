@@ -76,7 +76,16 @@ async def geocode_location(
             is_approximate=False
         )
 
-    # 2. Build prioritized search query for Nominatim
+    # 2. Try Google Geocoding API if GOOGLE_MAPS_API_KEY is configured
+    try:
+        from .google_maps_service import geocode_with_google
+        google_res = await geocode_with_google(query, village_town, block, district, state, pin_candidate)
+        if google_res:
+            return google_res
+    except Exception as ge:
+        logger.warning(f"Google Geocoding error: {ge}")
+
+    # 3. Build prioritized search query for Nominatim
     parts = []
     if village_town and village_town.strip():
         parts.append(village_town.strip())

@@ -122,8 +122,8 @@ export const InputWizard: React.FC<InputWizardProps> = ({
                 <MapPin className="w-4 h-4 text-sbi-blue" />
                 <span>1. Geographic Location (State, District, Mandal, Village)</span>
               </h3>
-              <span className="text-[10px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded font-bold border border-emerald-200">
-                OpenStreetMap Geocoded
+              <span className="text-[10px] text-blue-700 bg-blue-50 px-2 py-0.5 rounded font-bold border border-blue-200">
+                Google Maps Geocoded
               </span>
             </div>
 
@@ -213,10 +213,10 @@ export const InputWizard: React.FC<InputWizardProps> = ({
                 type="button"
                 onClick={handleResolveCoordinates}
                 disabled={isGeocoding || (!profile.villageTown && !profile.pincode)}
-                className="bg-white hover:bg-slate-100 text-sbi-blue border border-sbi-blue/40 px-3 py-1 rounded text-xs font-bold flex items-center gap-1.5 transition disabled:opacity-50"
+                className="bg-white hover:bg-slate-100 text-blue-700 border border-blue-300 px-3 py-1 rounded text-xs font-bold flex items-center gap-1.5 transition disabled:opacity-50"
               >
                 {isGeocoding ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Compass className="w-3.5 h-3.5" />}
-                <span>{isGeocoding ? 'Resolving OSM...' : 'Verify OSM Coordinates'}</span>
+                <span>{isGeocoding ? 'Resolving Google Maps...' : 'Verify on Google Maps'}</span>
               </button>
 
               {resolvedAddress ? (
@@ -225,7 +225,7 @@ export const InputWizard: React.FC<InputWizardProps> = ({
                 </span>
               ) : (
                 <span className="text-[11px] text-slate-400">
-                  Click to test OpenStreetMap geocoding resolution
+                  Click to test Google Maps geocoding resolution
                 </span>
               )}
             </div>

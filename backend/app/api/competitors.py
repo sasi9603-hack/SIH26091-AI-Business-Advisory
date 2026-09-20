@@ -30,11 +30,12 @@ async def search_competitors_endpoint(req: CompetitorSearchRequest, db: Session 
     and returns competitors sorted by nearest distance.
     """
     try:
-        # 1. Query OSM Overpass live
-        result = await search_osm_competitors(
+        # 1. Query Google Maps & Places live
+        from ..services.google_maps_service import search_google_places
+        result = await search_google_places(
             latitude=req.latitude,
             longitude=req.longitude,
-            business_category=req.business_category,
+            category=req.business_category,
             radius_km=req.radius_km
         )
 

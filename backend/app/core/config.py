@@ -27,7 +27,12 @@ class Settings(BaseSettings):
     GEMINI_API_KEY: str = ""
     GEMINI_MODEL: str = "gemini-1.5-flash"
     
-    # External APIs
+    # Google Maps & Places Configuration
+    GOOGLE_MAPS_API_KEY: str = ""
+    GOOGLE_GEOCODE_URL: str = "https://maps.googleapis.com/maps/api/geocode/json"
+    GOOGLE_PLACES_URL: str = "https://maps.googleapis.com/maps/api/place/nearbysearch/json"
+    
+    # External APIs (Open Data / Overpass / Nominatim)
     OVERPASS_API_URL: str = "https://overpass-api.de/api/interpreter"
     NOMINATIM_GEOCODE_URL: str = "https://nominatim.openstreetmap.org/search"
     GEOCODING_USER_AGENT: str = "SIH26091-Rural-Business-Advisory/1.0"

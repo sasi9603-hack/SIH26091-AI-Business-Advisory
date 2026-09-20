@@ -39,7 +39,7 @@ export const Footer: React.FC = () => {
           <ul className="space-y-1.5 text-xs">
             <li><a href="https://udyamregistration.gov.in" target="_blank" rel="noreferrer" className="hover:text-sbi-yellow transition">UDYAM MSME Portal</a></li>
             <li><a href="https://data.gov.in" target="_blank" rel="noreferrer" className="hover:text-sbi-yellow transition">data.gov.in (Open Government Data)</a></li>
-            <li><a href="https://www.openstreetmap.org" target="_blank" rel="noreferrer" className="hover:text-sbi-yellow transition">OpenStreetMap Geospatial POIs</a></li>
+            <li><a href="https://maps.google.com" target="_blank" rel="noreferrer" className="hover:text-sbi-yellow transition">Google Maps &amp; Places POIs</a></li>
             <li><a href="https://censusindia.gov.in" target="_blank" rel="noreferrer" className="hover:text-sbi-yellow transition">Census of India (Demographics)</a></li>
             <li><a href="https://lgdirectory.gov.in" target="_blank" rel="noreferrer" className="hover:text-sbi-yellow transition">Local Government Directory (LGD)</a></li>
           </ul>

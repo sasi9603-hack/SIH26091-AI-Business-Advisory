@@ -5,15 +5,19 @@ class CompetitorItem(BaseModel):
     id: str
     name: str
     category: str
-    source: Literal['UDYAM', 'OPENSTREETMAP', 'COMMUNITY'] = 'OPENSTREETMAP'
-    confidenceScore: float = 0.85
+    source: Literal['GOOGLE_MAPS', 'OPENSTREETMAP', 'UDYAM', 'COMMUNITY'] = 'GOOGLE_MAPS'
+    confidenceScore: float = 0.90
     verificationStatus: Literal['VERIFIED', 'UNVERIFIED'] = 'VERIFIED'
     distanceKm: float = Field(..., alias="distance_km")
     lat: float = Field(..., alias="latitude")
     lng: float = Field(..., alias="longitude")
     address: str
-    osm_type: Optional[str] = "node"
-    reportedDate: Optional[str] = "OpenStreetMap Active POI"
+    google_maps_url: Optional[str] = Field(None, alias="googleMapsUrl")
+    place_id: Optional[str] = None
+    rating: Optional[float] = None
+    user_ratings_total: Optional[int] = None
+    osm_type: Optional[str] = "google_place"
+    reportedDate: Optional[str] = "Google Maps Verified Place"
     upvotes: Optional[int] = 0
     tags: Optional[Dict[str, Any]] = None
 

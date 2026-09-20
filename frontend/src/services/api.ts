@@ -57,20 +57,25 @@ export async function fetchAdvisoryEvaluation(profile: EntrepreneurProfile, exis
         return {
           report: data.report,
           financials: data.financials,
-          competitors: (data.competitors || []).map((c: any) => ({
-            id: c.id,
-            name: c.name,
-            category: c.category,
-            source: c.source,
-            confidenceScore: c.confidenceScore ?? c.confidence_score ?? 0.85,
-            verificationStatus: c.verificationStatus ?? c.verification_status ?? 'VERIFIED',
-            distanceKm: c.distanceKm ?? c.distance_km ?? 0,
-            lat: c.lat ?? c.latitude,
-            lng: c.lng ?? c.longitude,
-            address: c.address,
-            reportedDate: c.reportedDate ?? c.reported_date,
-            upvotes: c.upvotes
-          }))
+          competitors: (data.competitors || []).map((c: any) => {
+            const cLat = c.lat ?? c.latitude;
+            const cLng = c.lng ?? c.longitude;
+            return {
+              id: c.id,
+              name: c.name,
+              category: c.category,
+              source: c.source || 'GOOGLE_MAPS',
+              confidenceScore: c.confidenceScore ?? c.confidence_score ?? 0.85,
+              verificationStatus: c.verificationStatus ?? c.verification_status ?? 'VERIFIED',
+              distanceKm: c.distanceKm ?? c.distance_km ?? 0,
+              lat: cLat,
+              lng: cLng,
+              address: c.address,
+              googleMapsUrl: c.googleMapsUrl ?? c.google_maps_url ?? `https://www.google.com/maps/search/?api=1&query=${cLat},${cLng}`,
+              reportedDate: c.reportedDate ?? c.reported_date,
+              upvotes: c.upvotes
+            };
+          })
         };
       }
     } catch (_err) {
@@ -269,20 +274,25 @@ export async function searchNearbyCompetitors(
         businessCategory: data.business_category,
         radiusKm: data.radius_km,
         disclaimer: data.disclaimer,
-        businesses: (data.businesses || []).map((b: any) => ({
-          id: b.id,
-          name: b.name,
-          category: b.category,
-          source: b.source,
-          confidenceScore: b.confidenceScore ?? b.confidence_score ?? 0.85,
-          verificationStatus: b.verificationStatus ?? b.verification_status ?? 'VERIFIED',
-          distanceKm: b.distanceKm ?? b.distance_km ?? 0,
-          lat: b.lat ?? b.latitude,
-          lng: b.lng ?? b.longitude,
-          address: b.address,
-          reportedDate: b.reportedDate ?? b.reported_date,
-          upvotes: b.upvotes
-        }))
+        businesses: (data.businesses || []).map((b: any) => {
+          const bLat = b.lat ?? b.latitude;
+          const bLng = b.lng ?? b.longitude;
+          return {
+            id: b.id,
+            name: b.name,
+            category: b.category,
+            source: b.source || 'GOOGLE_MAPS',
+            confidenceScore: b.confidenceScore ?? b.confidence_score ?? 0.85,
+            verificationStatus: b.verificationStatus ?? b.verification_status ?? 'VERIFIED',
+            distanceKm: b.distanceKm ?? b.distance_km ?? 0,
+            lat: bLat,
+            lng: bLng,
+            address: b.address,
+            googleMapsUrl: b.googleMapsUrl ?? b.google_maps_url ?? `https://www.google.com/maps/search/?api=1&query=${bLat},${bLng}`,
+            reportedDate: b.reportedDate ?? b.reported_date,
+            upvotes: b.upvotes
+          };
+        })
       };
     }
   } catch (err) {
