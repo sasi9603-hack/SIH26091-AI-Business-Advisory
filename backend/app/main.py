@@ -22,22 +22,41 @@ from .core.database import engine, Base, init_postgis, SessionLocal
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("Starting up SIH26091 API & verifying database connectivity...")
-    try:
-        init_postgis()
-        Base.metadata.create_all(bind=engine)
+    import asyncio
+    from sqlalchemy import text
+    connected = False
+    for attempt in range(1, 4):
         try:
-            from database.seed_data import seed_development_database
-            seed_development_database()
-        except Exception as seed_err:
-            logger.info(f"Database seed note: {seed_err}")
+            with engine.connect() as conn:
+                conn.execute(text("SELECT 1"))
+            logger.info("Database connection established successfully.")
+            connected = True
+            break
+        except Exception as conn_err:
+            logger.warning(f"Database connection attempt {attempt}/3: {conn_err}")
+            if attempt < 3:
+                await asyncio.sleep(2)
+
+    if connected:
         try:
-            from .services.rag_service import seed_rag_knowledge_base
-            with SessionLocal() as db:
-                seed_rag_knowledge_base(db)
-        except Exception as rag_err:
-            logger.info(f"RAG knowledge base seed note: {rag_err}")
-    except Exception as e:
-        logger.warning(f"Database initialization note: {e}")
+            init_postgis()
+            Base.metadata.create_all(bind=engine)
+            try:
+                from database.seed_data import seed_development_database
+                seed_development_database()
+            except Exception as seed_err:
+                logger.info(f"Database seed note: {seed_err}")
+            try:
+                from .services.rag_service import seed_rag_knowledge_base
+                with SessionLocal() as db:
+                    seed_rag_knowledge_base(db)
+            except Exception as rag_err:
+                logger.info(f"RAG knowledge base seed note: {rag_err}")
+        except Exception as e:
+            logger.warning(f"Database initialization note: {e}")
+    else:
+        logger.warning("Database not immediately reachable during startup; server running with resilient fail-soft.")
+
     yield
     logger.info("SIH26091 Advisory API shutdown completed.")
 
@@ -78,11 +97,20 @@ async def log_requests(request: Request, call_next):
 # Required Health Endpoint: GET /api/health
 @app.get("/api/health", tags=["System Health"])
 async def health_check():
+    db_status = "connected"
+    try:
+        from sqlalchemy import text
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+    except Exception as e:
+        db_status = f"unavailable ({str(e)})"
+
     return {
-        "status": "healthy",
+        "status": "healthy" if "unavailable" not in db_status else "degraded",
         "service": settings.PROJECT_NAME,
         "version": settings.VERSION,
         "environment": settings.ENVIRONMENT,
+        "database": db_status,
         "timestamp": datetime.utcnow().isoformat() + "Z"
     }
 

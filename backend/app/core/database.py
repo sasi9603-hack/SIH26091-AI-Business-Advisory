@@ -6,7 +6,7 @@ Base = declarative_base()
 
 def get_engine():
     db_url = settings.sync_database_url
-    connect_args = {"connect_timeout": 10}
+    connect_args = {"connect_timeout": 15}
     # If connecting to remote PostgreSQL (e.g. Supabase), ensure sslmode is required if not present in URL
     if "postgresql" in db_url and "localhost" not in db_url and "127.0.0.1" not in db_url:
         if "sslmode" not in db_url:
@@ -16,23 +16,13 @@ def get_engine():
         eng = create_engine(
             db_url,
             pool_pre_ping=True,
-            pool_size=10,
-            max_overflow=20,
+            pool_size=5,
+            max_overflow=10,
             connect_args=connect_args
         )
-        # Test connection
-        with eng.connect() as conn:
-            conn.execute(text("SELECT 1"))
-        logger.info("Connected to primary PostgreSQL database.")
         return eng
     except Exception as e:
-        if settings.ENVIRONMENT.lower() == "production":
-            logger.critical(f"FATAL: Production database connection failed: {e}")
-            raise RuntimeError(f"Database connection failed in production mode: {e}")
-        logger.warning(
-            f"Could not connect to PostgreSQL at {settings.POSTGRES_SERVER}:{settings.POSTGRES_PORT} ({e}). "
-            "Initializing development SQLite fallback database."
-        )
+        logger.error(f"Error initializing primary PostgreSQL engine ({e}). Falling back to local database engine.")
         fallback_url = "sqlite:///./dev_sih26091.db"
         return create_engine(fallback_url, connect_args={"check_same_thread": False})
 

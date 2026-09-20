@@ -66,7 +66,7 @@ class Settings(BaseSettings):
     @property
     def sync_database_url(self) -> str:
         if self.DATABASE_URL:
-            url = self.DATABASE_URL.strip()
+            url = self.DATABASE_URL.strip("'\" \r\n\t")
             # Normalize for psycopg2 if postgres:// or postgresql:// prefix provided (e.g. Supabase / Render)
             if url.startswith("postgres://"):
                 url = url.replace("postgres://", "postgresql+psycopg2://", 1)
@@ -78,7 +78,7 @@ class Settings(BaseSettings):
     @property
     def async_database_url(self) -> str:
         if self.DATABASE_URL:
-            url = self.DATABASE_URL.strip()
+            url = self.DATABASE_URL.strip("'\" \r\n\t")
             if url.startswith("postgres://"):
                 url = url.replace("postgres://", "postgresql+asyncpg://", 1)
             elif url.startswith("postgresql://"):
