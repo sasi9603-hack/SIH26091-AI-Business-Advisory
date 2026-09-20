@@ -21,39 +21,43 @@ async def geocode_endpoint(req: GeocodeRequest, db: Session = Depends(get_db)):
     """
     try:
         # 1. Check if matching location already exists in database with matching state
-        if req.pincode and req.state:
-            loc_record = (
-                db.query(Location)
-                .filter(
-                    Location.pincode == req.pincode.strip(),
-                    func.lower(Location.state).contains(req.state.strip().lower())
+        try:
+            if req.pincode and req.state:
+                loc_record = (
+                    db.query(Location)
+                    .filter(
+                        Location.pincode == req.pincode.strip(),
+                        func.lower(Location.state).contains(req.state.strip().lower())
+                    )
+                    .first()
                 )
-                .first()
-            )
-            if loc_record:
-                # If district specified, also verify match
-                dist_ok = True
-                if req.district and loc_record.district:
-                    dist_ok = (
-                        req.district.strip().lower() in loc_record.district.lower()
-                        or loc_record.district.lower() in req.district.strip().lower()
-                    )
-                if dist_ok:
-                    disp_str = f"{loc_record.village_town}, {loc_record.district}, {loc_record.state} - {loc_record.pincode}"
-                    return GeocodeResponse(
-                        latitude=loc_record.latitude,
-                        longitude=loc_record.longitude,
-                        display_name=disp_str,
-                        formatted_address=disp_str,
-                        village_town=loc_record.village_town,
-                        block=loc_record.block,
-                        mandal=loc_record.block,
-                        district=loc_record.district,
-                        state=loc_record.state,
-                        pincode=loc_record.pincode,
-                        is_approximate=False,
-                        confidence=1.0
-                    )
+                if loc_record:
+                    # If district specified, also verify match
+                    dist_ok = True
+                    if req.district and loc_record.district:
+                        dist_ok = (
+                            req.district.strip().lower() in loc_record.district.lower()
+                            or loc_record.district.lower() in req.district.strip().lower()
+                        )
+                    if dist_ok:
+                        disp_str = f"{loc_record.village_town}, {loc_record.district}, {loc_record.state} - {loc_record.pincode}"
+                        return GeocodeResponse(
+                            latitude=loc_record.latitude,
+                            longitude=loc_record.longitude,
+                            display_name=disp_str,
+                            formatted_address=disp_str,
+                            village_town=loc_record.village_town,
+                            block=loc_record.block,
+                            mandal=loc_record.block,
+                            district=loc_record.district,
+                            state=loc_record.state,
+                            pincode=loc_record.pincode,
+                            is_approximate=False,
+                            confidence=1.0
+                        )
+        except Exception as cache_err:
+            db.rollback()
+            logger.debug(f"DB cache lookup note (proceeding to live geocoding): {cache_err}")
 
         # 2. Call live geocoding service with hierarchical validation
         res = await geocode_location(
