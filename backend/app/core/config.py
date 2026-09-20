@@ -66,7 +66,17 @@ class Settings(BaseSettings):
     @property
     def sync_database_url(self) -> str:
         if self.DATABASE_URL:
+            import urllib.parse
             url = self.DATABASE_URL.strip("'\" \r\n\t")
+            # Auto-encode unescaped special characters (e.g. '@') in password
+            if url.count("@") > 1 and "://" in url:
+                scheme, remainder = url.split("://", 1)
+                user_pass, host_part = remainder.rsplit("@", 1)
+                if ":" in user_pass:
+                    username, password = user_pass.split(":", 1)
+                    safe_password = urllib.parse.quote_plus(urllib.parse.unquote_plus(password))
+                    url = f"{scheme}://{username}:{safe_password}@{host_part}"
+
             # Normalize for psycopg2 if postgres:// or postgresql:// prefix provided (e.g. Supabase / Render)
             if url.startswith("postgres://"):
                 url = url.replace("postgres://", "postgresql+psycopg2://", 1)
@@ -78,7 +88,16 @@ class Settings(BaseSettings):
     @property
     def async_database_url(self) -> str:
         if self.DATABASE_URL:
+            import urllib.parse
             url = self.DATABASE_URL.strip("'\" \r\n\t")
+            if url.count("@") > 1 and "://" in url:
+                scheme, remainder = url.split("://", 1)
+                user_pass, host_part = remainder.rsplit("@", 1)
+                if ":" in user_pass:
+                    username, password = user_pass.split(":", 1)
+                    safe_password = urllib.parse.quote_plus(urllib.parse.unquote_plus(password))
+                    url = f"{scheme}://{username}:{safe_password}@{host_part}"
+
             if url.startswith("postgres://"):
                 url = url.replace("postgres://", "postgresql+asyncpg://", 1)
             elif url.startswith("postgresql://"):
