@@ -12,28 +12,65 @@ import { Footer } from './components/Footer';
 
 import { EntrepreneurProfile, AdvisoryReport, FinancialBreakdown, CompetitorBusiness } from './types';
 import { DEFAULT_PROFILE, INITIAL_COMPETITORS } from './services/mockData';
-import { fetchAdvisoryEvaluation } from './services/api';
+import { fetchAdvisoryEvaluation, searchNearbyCompetitors } from './services/api';
+import { CommunityReportModal } from './components/CommunityReportModal';
 import { Globe } from 'lucide-react';
 
 export const App: React.FC = () => {
   const [profile, setProfile] = useState<EntrepreneurProfile>(DEFAULT_PROFILE);
   const [report, setReport] = useState<AdvisoryReport | null>(null);
   const [financials, setFinancials] = useState<FinancialBreakdown | null>(null);
-  const [competitors] = useState<CompetitorBusiness[]>(INITIAL_COMPETITORS);
+  const [competitors, setCompetitors] = useState<CompetitorBusiness[]>(INITIAL_COMPETITORS);
+  const [mapDisclaimer, setMapDisclaimer] = useState<string>('');
 
   const [activeTab, setActiveTab] = useState<string>('overview');
   const [currentLang, setCurrentLang] = useState<string>('en');
 
   const [isWizardOpen, setIsWizardOpen] = useState<boolean>(false);
   const [isChatOpen, setIsChatOpen] = useState<boolean>(false);
+  const [isReportModalOpen, setIsReportModalOpen] = useState<boolean>(false);
 
-  // Load advisory evaluation whenever profile changes
+  // Load advisory evaluation and nearby competitors whenever profile changes
   useEffect(() => {
-    fetchAdvisoryEvaluation(profile).then((data) => {
+    fetchAdvisoryEvaluation(profile, competitors).then((data) => {
       setReport(data.report);
       setFinancials(data.financials);
+      if (data.competitors) {
+        setCompetitors(data.competitors);
+      }
+    });
+
+    const lat = profile.lat || 16.3067;
+    const lng = profile.lng || 80.4365;
+    searchNearbyCompetitors(lat, lng, profile.category, profile.radiusKm || 3.0).then((res) => {
+      if (res.businesses) {
+        setCompetitors(res.businesses);
+      }
+      setMapDisclaimer(res.disclaimer);
     });
   }, [profile]);
+
+  const handleRadiusChange = async (newRadius: number) => {
+    const updated = { ...profile, radiusKm: newRadius };
+    setProfile(updated);
+    const lat = profile.lat || 16.3067;
+    const lng = profile.lng || 80.4365;
+    const res = await searchNearbyCompetitors(lat, lng, profile.category, newRadius);
+    if (res.businesses) {
+      setCompetitors(res.businesses);
+    }
+    setMapDisclaimer(res.disclaimer);
+  };
+
+  const refreshCompetitors = async () => {
+    const lat = profile.lat || 16.3067;
+    const lng = profile.lng || 80.4365;
+    const res = await searchNearbyCompetitors(lat, lng, profile.category, profile.radiusKm || 3.0);
+    if (res.businesses) {
+      setCompetitors(res.businesses);
+    }
+    setMapDisclaimer(res.disclaimer);
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-sbi-bg text-slate-800 font-sans">
@@ -75,6 +112,10 @@ export const App: React.FC = () => {
           <MarketFeasibilityAnalyzer
             profile={profile}
             financials={financials}
+            competitors={competitors}
+            disclaimer={mapDisclaimer}
+            onRadiusChange={handleRadiusChange}
+            onOpenReportModal={() => setIsReportModalOpen(true)}
             onNavigateTab={setActiveTab}
             onOpenWizard={() => setIsWizardOpen(true)}
           />
@@ -113,6 +154,15 @@ export const App: React.FC = () => {
         onClose={() => setIsWizardOpen(false)}
         currentProfile={profile}
         onSaveProfile={setProfile}
+      />
+
+      <CommunityReportModal
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+        defaultLat={profile.lat || 16.3067}
+        defaultLng={profile.lng || 80.4365}
+        defaultCategory={profile.category}
+        onSuccess={refreshCompetitors}
       />
 
       <AIAssistantChat

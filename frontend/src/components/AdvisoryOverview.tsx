@@ -1,21 +1,31 @@
 import React, { useState } from 'react';
-import { EntrepreneurProfile, AdvisoryReport, FinancialBreakdown, CompetitorBusiness } from '../types';
+import { 
+  EntrepreneurProfile, 
+  AdvisoryReport, 
+  FinancialBreakdown, 
+  CompetitorBusiness,
+  ExplainableAdvisoryResponse 
+} from '../types';
 import { BRANDING } from '../config/branding';
 import { CATEGORY_LABELS } from '../services/mockData';
 import { SIH_SCHEMES } from '../services/sihSchemes';
+import { fetchExplainableAdvisory } from '../services/api';
+import { ExplainableReportView } from './ExplainableReportView';
 import { 
   MapPin, 
   Percent, 
   ExternalLink, 
   ShieldCheck, 
   Calculator, 
-  Sparkles,
-  Calendar,
-  AlertTriangle,
-  ArrowRight,
-  Info,
-  CheckCircle2,
-  TrendingUp
+  Sparkles, 
+  Calendar, 
+  AlertTriangle, 
+  ArrowRight, 
+  Info, 
+  CheckCircle2, 
+  TrendingUp,
+  FileText,
+  Loader2
 } from 'lucide-react';
 
 interface AdvisoryOverviewProps {
@@ -39,6 +49,43 @@ export const AdvisoryOverview: React.FC<AdvisoryOverviewProps> = ({
 }) => {
   const [activeSchemeTab, setActiveSchemeTab] = useState<'both' | 'micro' | 'term'>('both');
   const [showFullSchedule, setShowFullSchedule] = useState<boolean>(false);
+  const [activeViewMode, setActiveViewMode] = useState<'scheme_advisory' | 'explainable_report'>('scheme_advisory');
+  const [explainableReport, setExplainableReport] = useState<ExplainableAdvisoryResponse | null>(null);
+  const [isGeneratingReport, setIsGeneratingReport] = useState<boolean>(false);
+
+  const handleGenerateExplainableReport = async () => {
+    setIsGeneratingReport(true);
+    try {
+      const res = await fetchExplainableAdvisory({
+        query: `Explainable viability report for ${profile.category} in ${profile.villageTown || profile.district}`,
+        user_profile: {
+          social_category: profile.socialCategory,
+          is_rural: profile.isRural
+        },
+        business_plan: {
+          business_category: profile.category,
+          proposed_capital: profile.availableCapital
+        },
+        location: {
+          pincode: profile.pincode,
+          village_town: profile.villageTown,
+          district: profile.district,
+          state: profile.state,
+          latitude: profile.lat,
+          longitude: profile.lng,
+          search_radius_km: profile.radiusKm || 3.0
+        }
+      });
+      if (res) {
+        setExplainableReport(res);
+        setActiveViewMode('explainable_report');
+      }
+    } catch (err) {
+      console.warn('Explainable advisory generation error:', err);
+    } finally {
+      setIsGeneratingReport(false);
+    }
+  };
 
   const isConfigured = profile.availableCapital > 0;
   const isOutsideRange = financials?.isOutsideRange || false;
@@ -164,25 +211,96 @@ export const AdvisoryOverview: React.FC<AdvisoryOverviewProps> = ({
                 <span className="text-[10px] bg-emerald-100 text-emerald-800 px-1.5 py-0.2 rounded font-bold">Eligible</span>
               )}
             </button>
+
+            {/* Explainable Report Sidebar Trigger */}
+            <div className="pt-2 border-t border-slate-200">
+              <button
+                onClick={() => {
+                  setActiveViewMode('explainable_report');
+                  if (!explainableReport) {
+                    handleGenerateExplainableReport();
+                  }
+                }}
+                className={`w-full text-left px-3 py-2 rounded-lg transition flex items-center justify-between text-xs font-bold ${
+                  activeViewMode === 'explainable_report'
+                    ? 'bg-purple-100 text-sbi-indigo border border-sbi-indigo'
+                    : 'bg-purple-50 hover:bg-purple-100 text-sbi-indigo'
+                }`}
+              >
+                <div className="flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-sbi-blue" />
+                  <span>10-Sec Explainable Report</span>
+                </div>
+                <span className="text-[9px] bg-sbi-yellow text-sbi-indigo px-1.5 py-0.2 rounded">Gemini</span>
+              </button>
+            </div>
           </div>
         </div>
 
         {/* Center Main Content Area (8 Cols) */}
         <div className="lg:col-span-8 space-y-6">
-          {/* Main Advisory & Scheme Article Card */}
-          <div className="bg-white rounded-xl shadow-sbi border border-sbi-border p-6 sm:p-8 space-y-6 relative">
-            {/* Top Prototype Badge */}
-            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-4">
-              <span className="text-xs font-bold text-sbi-blue uppercase tracking-widest flex items-center gap-1">
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>SIH26091 Advisory Synthesis</span>
-              </span>
+          {/* Top View Mode Switcher Header */}
+          <div className="bg-white rounded-xl shadow-sbi border border-sbi-border p-2 flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setActiveViewMode('scheme_advisory')}
+                className={`px-4 py-2 rounded-lg text-xs font-bold transition flex items-center gap-2 ${
+                  activeViewMode === 'scheme_advisory'
+                    ? 'bg-sbi-indigo text-white shadow-sm'
+                    : 'text-slate-600 hover:bg-slate-100'
+                }`}
+              >
+                <Calculator className="w-3.5 h-3.5" />
+                <span>SIH26091 Scheme &amp; Repayment</span>
+              </button>
 
-              <span className="bg-sky-50 text-sbi-blue border border-sky-200 text-[11px] font-semibold px-2.5 py-0.5 rounded-full flex items-center gap-1">
-                <Info className="w-3 h-3" />
-                <span>Financial parameters based on SIH26091 problem statement.</span>
-              </span>
+              <button
+                onClick={() => {
+                  setActiveViewMode('explainable_report');
+                  if (!explainableReport) {
+                    handleGenerateExplainableReport();
+                  }
+                }}
+                className={`px-4 py-2 rounded-lg text-xs font-bold transition flex items-center gap-2 ${
+                  activeViewMode === 'explainable_report'
+                    ? 'bg-sbi-indigo text-white shadow-sm'
+                    : 'text-slate-600 hover:bg-slate-100'
+                }`}
+              >
+                <Sparkles className="w-3.5 h-3.5 text-sbi-yellow" />
+                <span>10-Section Explainable Report (Gemini)</span>
+              </button>
             </div>
+
+            {activeViewMode === 'explainable_report' && (
+              <span className="text-[10px] bg-emerald-50 text-emerald-800 border border-emerald-200 px-2 py-1 rounded font-bold">
+                4-Way Provenance Segregation
+              </span>
+            )}
+          </div>
+
+          {activeViewMode === 'explainable_report' ? (
+            <ExplainableReportView
+              report={explainableReport}
+              isLoading={isGeneratingReport}
+              onGenerateReport={handleGenerateExplainableReport}
+              onOpenWizard={onOpenWizard}
+            />
+          ) : (
+            /* Main Advisory & Scheme Article Card */
+            <div className="bg-white rounded-xl shadow-sbi border border-sbi-border p-6 sm:p-8 space-y-6 relative">
+              {/* Top Prototype Badge */}
+              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-4">
+                <span className="text-xs font-bold text-sbi-blue uppercase tracking-widest flex items-center gap-1">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>SIH26091 Advisory Synthesis</span>
+                </span>
+
+                <span className="bg-sky-50 text-sbi-blue border border-sky-200 text-[11px] font-semibold px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                  <Info className="w-3 h-3" />
+                  <span>Financial parameters based on SIH26091 problem statement.</span>
+                </span>
+              </div>
 
             {/* Scheme Title in Bold Royal Indigo */}
             <div>
@@ -680,8 +798,22 @@ export const AdvisoryOverview: React.FC<AdvisoryOverviewProps> = ({
                 <ArrowRight className="w-3.5 h-3.5 text-sbi-indigo" />
                 <span>Change Margin Capital</span>
               </button>
+
+              <button
+                onClick={() => {
+                  setActiveViewMode('explainable_report');
+                  if (!explainableReport) {
+                    handleGenerateExplainableReport();
+                  }
+                }}
+                className="bg-purple-50 hover:bg-purple-100 text-sbi-indigo font-bold text-xs px-4 py-2 rounded-md border border-purple-300 shadow-sm transition active:scale-95 flex items-center gap-1.5"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-sbi-indigo" />
+                <span>10-Sec Explainable Report</span>
+              </button>
             </div>
           </div>
+          )}
         </div>
 
         {/* Right Floating Quick-Action Bar */}

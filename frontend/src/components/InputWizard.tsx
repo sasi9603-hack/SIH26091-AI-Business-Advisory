@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { EntrepreneurProfile, BusinessCategory } from '../types';
 import { CATEGORY_LABELS } from '../services/mockData';
 import { evaluateSIHScheme } from '../services/sihSchemes';
-import { X, Check, MapPin, IndianRupee, Building2 } from 'lucide-react';
+import { geocodeLocation } from '../services/api';
+import { X, Check, MapPin, IndianRupee, Building2, Compass, Loader2 } from 'lucide-react';
 
 interface InputWizardProps {
   isOpen: boolean;
@@ -18,13 +19,75 @@ export const InputWizard: React.FC<InputWizardProps> = ({
   onSaveProfile
 }) => {
   const [profile, setProfile] = useState<EntrepreneurProfile>(currentProfile);
+  const [isGeocoding, setIsGeocoding] = useState<boolean>(false);
+  const [resolvedAddress, setResolvedAddress] = useState<string>(
+    currentProfile.lat && currentProfile.lng 
+      ? `${currentProfile.villageTown || currentProfile.district} [${currentProfile.lat.toFixed(4)}°N, ${currentProfile.lng.toFixed(4)}°E]`
+      : ''
+  );
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleResolveCoordinates = async () => {
+    setIsGeocoding(true);
+    try {
+      const geo = await geocodeLocation({
+        villageTown: profile.villageTown,
+        block: profile.block,
+        district: profile.district,
+        state: profile.state,
+        pincode: profile.pincode
+      });
+      setProfile((prev) => ({
+        ...prev,
+        lat: geo.latitude,
+        lng: geo.longitude,
+        district: prev.district || geo.district,
+        state: prev.state || geo.state,
+        pincode: prev.pincode || geo.pincode
+      }));
+      setResolvedAddress(`${geo.displayName || geo.formattedAddress} (${geo.latitude.toFixed(4)}°N, ${geo.longitude.toFixed(4)}°E)`);
+    } catch (err) {
+      console.error('Geocoding error:', err);
+    } finally {
+      setIsGeocoding(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSaveProfile(profile);
-    onClose();
+    setIsGeocoding(true);
+
+    try {
+      // 1. Resolve geographic coordinates via real geocode API
+      const geo = await geocodeLocation({
+        villageTown: profile.villageTown,
+        block: profile.block,
+        district: profile.district,
+        state: profile.state,
+        pincode: profile.pincode
+      });
+
+      const updated: EntrepreneurProfile = {
+        ...profile,
+        lat: geo.latitude,
+        lng: geo.longitude,
+        villageTown: profile.villageTown || geo.villageTown,
+        district: profile.district || geo.district,
+        state: profile.state || geo.state,
+        pincode: profile.pincode || geo.pincode,
+        radiusKm: profile.radiusKm || 3.0
+      };
+
+      onSaveProfile(updated);
+      onClose();
+    } catch (err) {
+      console.error('Error saving profile:', err);
+      onSaveProfile(profile);
+      onClose();
+    } finally {
+      setIsGeocoding(false);
+    }
   };
 
   const budgetChips = [10000, 14000, 20000, 100000, 500000];
@@ -39,7 +102,7 @@ export const InputWizard: React.FC<InputWizardProps> = ({
             <Building2 className="w-5 h-5 text-sbi-yellow" />
             <div>
               <h2 className="text-base font-bold">Configure Business &amp; Location Profile</h2>
-              <p className="text-xs text-slate-300">Financial parameters and scheme structuring based on SIH26091 specifications</p>
+              <p className="text-xs text-slate-300">Hyper-local spatial geocoding &amp; SIH26091 financial parameters</p>
             </div>
           </div>
           <button
@@ -54,32 +117,26 @@ export const InputWizard: React.FC<InputWizardProps> = ({
         <form onSubmit={handleSubmit} className="p-6 space-y-5 text-sm">
           {/* 1. Geographic Location Section */}
           <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 space-y-3">
-            <h3 className="font-bold text-sbi-navy flex items-center gap-1.5 text-xs uppercase tracking-wider">
-              <MapPin className="w-4 h-4 text-sbi-blue" />
-              <span>1. Geographic Location</span>
-            </h3>
+            <div className="flex items-center justify-between">
+              <h3 className="font-bold text-sbi-navy flex items-center gap-1.5 text-xs uppercase tracking-wider">
+                <MapPin className="w-4 h-4 text-sbi-blue" />
+                <span>1. Geographic Location (State, District, Mandal, Village)</span>
+              </h3>
+              <span className="text-[10px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded font-bold border border-emerald-200">
+                OpenStreetMap Geocoded
+              </span>
+            </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">Village / Town Name *</label>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">State *</label>
                 <input
                   type="text"
-                  value={profile.villageTown}
-                  onChange={(e) => setProfile({ ...profile, villageTown: e.target.value })}
-                  placeholder="e.g. Rampur Village"
+                  value={profile.state || 'Andhra Pradesh'}
+                  onChange={(e) => setProfile({ ...profile, state: e.target.value })}
+                  placeholder="e.g. Andhra Pradesh"
                   className="w-full bg-white border border-slate-300 rounded px-3 py-1.5 text-sm focus:border-sbi-blue focus:outline-none"
                   required
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">Block / Mandal</label>
-                <input
-                  type="text"
-                  value={profile.block || ''}
-                  onChange={(e) => setProfile({ ...profile, block: e.target.value })}
-                  placeholder="e.g. Block Development Area"
-                  className="w-full bg-white border border-slate-300 rounded px-3 py-1.5 text-sm focus:border-sbi-blue focus:outline-none"
                 />
               </div>
 
@@ -96,15 +153,81 @@ export const InputWizard: React.FC<InputWizardProps> = ({
               </div>
 
               <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">Block / Mandal</label>
+                <input
+                  type="text"
+                  value={profile.block || ''}
+                  onChange={(e) => setProfile({ ...profile, block: e.target.value })}
+                  placeholder="e.g. Tenali Mandal"
+                  className="w-full bg-white border border-slate-300 rounded px-3 py-1.5 text-sm focus:border-sbi-blue focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">Village / Town Name *</label>
+                <input
+                  type="text"
+                  value={profile.villageTown}
+                  onChange={(e) => setProfile({ ...profile, villageTown: e.target.value })}
+                  placeholder="e.g. Tenali Town / Angalakuduru"
+                  className="w-full bg-white border border-slate-300 rounded px-3 py-1.5 text-sm focus:border-sbi-blue focus:outline-none"
+                  required
+                />
+              </div>
+
+              <div>
                 <label className="block text-xs font-semibold text-slate-600 mb-1">Postal PIN Code (Optional)</label>
                 <input
                   type="text"
                   value={profile.pincode}
                   onChange={(e) => setProfile({ ...profile, pincode: e.target.value })}
-                  placeholder="e.g. 522002"
+                  placeholder="e.g. 522201"
                   className="w-full bg-white border border-slate-300 rounded px-3 py-1.5 text-sm focus:border-sbi-blue focus:outline-none"
                 />
               </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">Spatial Search Radius</label>
+                <div className="flex items-center space-x-1.5">
+                  {[1, 2, 3, 5, 10].map((r) => (
+                    <button
+                      key={r}
+                      type="button"
+                      onClick={() => setProfile({ ...profile, radiusKm: r })}
+                      className={`px-2.5 py-1.5 rounded text-xs font-bold border transition ${
+                        (profile.radiusKm || 3) === r
+                          ? 'bg-sbi-blue text-white border-sbi-blue shadow-xs'
+                          : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-100'
+                      }`}
+                    >
+                      {r} km
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Live Geocoding Verification Action & Status */}
+            <div className="pt-2 border-t border-slate-200 flex flex-wrap items-center justify-between gap-2">
+              <button
+                type="button"
+                onClick={handleResolveCoordinates}
+                disabled={isGeocoding || (!profile.villageTown && !profile.pincode)}
+                className="bg-white hover:bg-slate-100 text-sbi-blue border border-sbi-blue/40 px-3 py-1 rounded text-xs font-bold flex items-center gap-1.5 transition disabled:opacity-50"
+              >
+                {isGeocoding ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Compass className="w-3.5 h-3.5" />}
+                <span>{isGeocoding ? 'Resolving OSM...' : 'Verify OSM Coordinates'}</span>
+              </button>
+
+              {resolvedAddress ? (
+                <span className="text-[11px] text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 font-mono">
+                  ✓ {resolvedAddress}
+                </span>
+              ) : (
+                <span className="text-[11px] text-slate-400">
+                  Click to test OpenStreetMap geocoding resolution
+                </span>
+              )}
             </div>
           </div>
 
@@ -112,7 +235,7 @@ export const InputWizard: React.FC<InputWizardProps> = ({
           <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 space-y-3">
             <h3 className="font-bold text-sbi-navy flex items-center gap-1.5 text-xs uppercase tracking-wider">
               <Building2 className="w-4 h-4 text-sbi-blue" />
-              <span>2. Proposed Business</span>
+              <span>2. Proposed Business &amp; Sector</span>
             </h3>
 
             <div>
@@ -238,9 +361,6 @@ export const InputWizard: React.FC<InputWizardProps> = ({
                     </div>
                   </div>
                 )}
-                <span className="text-[10px] text-slate-400 block mt-1">
-                  Financial parameters based on SIH26091 problem statement.
-                </span>
               </div>
             )}
           </div>
@@ -250,16 +370,26 @@ export const InputWizard: React.FC<InputWizardProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-900 border border-slate-300 rounded bg-white hover:bg-slate-50 transition"
+              className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 transition"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-5 py-2 text-xs font-bold text-white bg-sbi-indigo hover:bg-purple-950 rounded shadow flex items-center gap-1.5 transition active:scale-95"
+              disabled={isGeocoding}
+              className="bg-sbi-indigo hover:bg-purple-950 text-white font-bold text-xs px-6 py-2 rounded-lg flex items-center space-x-1.5 shadow-md transition active:scale-95 disabled:opacity-75"
             >
-              <Check className="w-4 h-4 text-sbi-yellow" />
-              <span>Save &amp; Apply Financial Advisory</span>
+              {isGeocoding ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin text-sbi-yellow" />
+                  <span>Geocoding Location...</span>
+                </>
+              ) : (
+                <>
+                  <Check className="w-4 h-4 text-sbi-yellow" />
+                  <span>Save &amp; Analyze Market</span>
+                </>
+              )}
             </button>
           </div>
         </form>

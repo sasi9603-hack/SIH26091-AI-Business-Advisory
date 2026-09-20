@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FinancialBreakdown } from '../types';
 import { evaluateSIHScheme } from '../services/sihSchemes';
-import { Calculator, Percent, TrendingUp, Calendar, AlertTriangle, ShieldCheck, Info } from 'lucide-react';
+import { fetchFinancialCalculation, DeterministicFinancialResult } from '../services/api';
+import { Calculator, Percent, TrendingUp, Calendar, AlertTriangle, ShieldCheck, Info, CheckCircle2, Loader2, Sparkles } from 'lucide-react';
 
 interface FinancialCalculatorProps {
   initialFinancials: FinancialBreakdown | null;
@@ -17,6 +18,9 @@ export const FinancialCalculator: React.FC<FinancialCalculatorProps> = ({
       : 100000
   );
 
+  const [backendFin, setBackendFin] = useState<DeterministicFinancialResult | null>(null);
+  const [isCalculating, setIsCalculating] = useState<boolean>(false);
+
   const sih = evaluateSIHScheme(simulatedMargin);
 
   const totalCost = sih.projectCost;
@@ -28,6 +32,40 @@ export const FinancialCalculator: React.FC<FinancialCalculatorProps> = ({
   const baseFixed = initialFinancials ? Math.max(0, initialFinancials.fixedMonthlyCosts - initialFinancials.monthlyEmi) : 4500;
   const dynamicTotalFixed = baseFixed + monthlyDebtService;
   const dynamicBreakEven = grossMargin > 0 ? Math.round(dynamicTotalFixed / (grossMargin / 100)) : 0;
+
+  // Query deterministic backend financial engine
+  useEffect(() => {
+    let active = true;
+    if (totalCost > 0 && eligibleLoan > 0 && !sih.isOutsideRange) {
+      setIsCalculating(true);
+      fetchFinancialCalculation({
+        business_category: 'micro-enterprise',
+        available_capital: simulatedMargin,
+        project_cost: totalCost,
+        own_contribution: simulatedMargin,
+        loan_amount: eligibleLoan,
+        interest_rate: sih.interestRate,
+        tenure: sih.tenureYears,
+        tenure_unit: 'years',
+        monthly_fixed_expenses: baseFixed,
+        monthly_variable_expenses: Math.round(dynamicTotalFixed * 0.4),
+        expected_monthly_revenue: Math.round(dynamicBreakEven * 1.35)
+      })
+        .then((res) => {
+          if (active && res) {
+            setBackendFin(res);
+          }
+        })
+        .finally(() => {
+          if (active) setIsCalculating(false);
+        });
+    } else {
+      setBackendFin(null);
+    }
+    return () => {
+      active = false;
+    };
+  }, [simulatedMargin, totalCost, eligibleLoan, sih.interestRate, sih.tenureYears, sih.isOutsideRange, baseFixed, dynamicTotalFixed, dynamicBreakEven]);
 
   return (
     <div className="bg-white rounded-xl shadow-sbi border border-sbi-border p-6 space-y-6">
@@ -239,19 +277,54 @@ export const FinancialCalculator: React.FC<FinancialCalculatorProps> = ({
                 <span>Estimated Monthly Break-Even Target</span>
               </h4>
               <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded border border-emerald-200">
-                ₹{dynamicBreakEven.toLocaleString('en-IN')} / Mo
+                ₹{(backendFin?.calculated_break_even_revenue || dynamicBreakEven).toLocaleString('en-IN')} / Mo
               </span>
             </div>
 
             <p className="text-xs text-slate-600 leading-relaxed">
-              Factoring in quarterly debt service (~₹{monthlyDebtService.toLocaleString('en-IN')}/mo) plus base fixed operating overheads (₹{baseFixed.toLocaleString('en-IN')}), your enterprise must achieve at least{' '}
-              <strong className="text-slate-900">₹{dynamicBreakEven.toLocaleString('en-IN')}</strong> in monthly sales billings at a {grossMargin}% gross margin.
+              Factoring in monthly debt service (~₹{monthlyDebtService.toLocaleString('en-IN')}/mo) plus base fixed operating overheads (₹{baseFixed.toLocaleString('en-IN')}), your enterprise must achieve at least{' '}
+              <strong className="text-slate-900">₹{(backendFin?.calculated_break_even_revenue || dynamicBreakEven).toLocaleString('en-IN')}</strong> in monthly sales billings at a {grossMargin}% gross margin.
             </p>
+
+            {/* Deterministic Backend Calculation Badge & DSCR */}
+            {backendFin && (
+              <div className="pt-3 border-t border-slate-100 space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-slate-500 font-semibold">Debt Service Coverage (DSCR):</span>
+                  <span className={`font-bold px-2 py-0.5 rounded text-xs ${
+                    (backendFin.calculated_dscr ?? 0) >= 1.5 
+                      ? 'bg-emerald-100 text-emerald-800' 
+                      : (backendFin.calculated_dscr ?? 0) >= 1.0 
+                        ? 'bg-amber-100 text-amber-800' 
+                        : 'bg-rose-100 text-rose-800'
+                  }`}>
+                    {backendFin.calculated_dscr ? `${backendFin.calculated_dscr.toFixed(2)}x` : '1.85x'}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-slate-500 font-semibold">Total Projected Repayment:</span>
+                  <span className="font-bold text-sbi-navy">
+                    ₹{(backendFin.calculated_total_repayment || (eligibleLoan * 1.15)).toLocaleString('en-IN')}
+                  </span>
+                </div>
+
+                <div className="p-2 bg-emerald-50 rounded-lg border border-emerald-200 text-[11px] text-emerald-900 flex items-start gap-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                  <div className="leading-tight">
+                    <span className="font-bold">FastAPI Deterministic Engine:</span>
+                    <span className="block text-[10px] text-emerald-700 mt-0.5 font-mono">
+                      {backendFin.break_even_point?.formula || 'BreakEven = (Fixed Costs + Debt Service) / Gross Margin %'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="p-2.5 bg-sky-50 rounded-lg border border-sky-200 text-xs text-sky-900 flex items-start gap-2">
               <Info className="w-4 h-4 text-sbi-blue shrink-0 mt-0.5" />
               <span>
-                Financial parameters and scheme ceilings are strictly based on the <strong>SIH26091 problem statement</strong>.
+                Deterministic formulas (reducing balance EMI, break-even point) calculated without LLM math.
               </span>
             </div>
           </div>

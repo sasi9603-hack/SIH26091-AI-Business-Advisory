@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { EntrepreneurProfile, AdvisoryReport, FinancialBreakdown } from '../types';
-import { X, Send, Bot, User, ShieldAlert } from 'lucide-react';
+import { chatWithAdvisor, consultAiAgent } from '../services/api';
+import { X, Send, Bot, User, ShieldAlert, Loader2, Sparkles } from 'lucide-react';
 
 interface AIAssistantChatProps {
   isOpen: boolean;
@@ -14,6 +15,7 @@ interface Message {
   sender: 'bot' | 'user';
   text: string;
   time: string;
+  isAiGenerated?: boolean;
 }
 
 export const AIAssistantChat: React.FC<AIAssistantChatProps> = ({
@@ -24,11 +26,18 @@ export const AIAssistantChat: React.FC<AIAssistantChatProps> = ({
   financials
 }) => {
   const [input, setInput] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [quickPrompts, setQuickPrompts] = useState<string[]>([
+    "What is my eligible scheme & loan?",
+    "Explain moratorium & repayment",
+    "How is project cost calculated?",
+    "What is my monthly break-even?"
+  ]);
   const [messages, setMessages] = useState<Message[]>([
     {
       sender: 'bot',
       text: profile.villageTown || profile.pincode 
-        ? `Namaste! I am your SIH26091 Grounded AI Advisory Assistant. I synthesize verified spatial intelligence, financial calculations, and official SIH26091 scheme rules (Micro Finance & Term Loan) for ${profile.villageTown || 'your area'}. How can I assist your enterprise plan today?`
+        ? `Namaste! I am your SIH26091 Grounded AI Advisory Assistant powered by Gemini. I synthesize verified spatial intelligence, deterministic calculations, and official scheme rules for ${profile.villageTown || 'your area'}. How can I assist your enterprise plan today?`
         : `Namaste! I am your SIH26091 Grounded AI Advisory Assistant. Configure your target location and Available Margin Capital in the profile configurator, and I will assist you with verified spatial competition data and scheme structuring.`,
       time: 'Just now'
     }
@@ -36,46 +45,51 @@ export const AIAssistantChat: React.FC<AIAssistantChatProps> = ({
 
   if (!isOpen) return null;
 
-  const handleSend = (textToSend?: string) => {
+  const handleSend = async (textToSend?: string) => {
     const q = textToSend || input;
-    if (!q.trim()) return;
+    if (!q.trim() || isLoading) return;
 
     const userMsg: Message = { sender: 'user', text: q, time: 'Just now' };
     const newMessages = [...messages, userMsg];
     setMessages(newMessages);
     setInput('');
+    setIsLoading(true);
 
-    // Generate grounded deterministic response
-    setTimeout(() => {
-      let botResponse = '';
-      const lower = q.toLowerCase();
+    try {
+      // Query real Gemini AI Advisory endpoint
+      const result = await chatWithAdvisor(q, {
+        village_town: profile.villageTown,
+        pincode: profile.pincode,
+        category: profile.category,
+        available_capital: profile.availableCapital
+      });
 
-      if (!financials || !report || financials.totalProjectCost <= 0) {
-        botResponse = `Please click "Change Profile" to configure your target location and Available Margin Capital. Once entered, I will calculate your estimated project cost (10x margin) and match the Micro Finance Scheme or Term Loan Scheme under SIH26091 guidelines.`;
-      } else if (financials.isOutsideRange) {
-        botResponse = `Your calculated project cost of ₹${financials.totalProjectCost.toLocaleString('en-IN')} (from an available margin of ₹${profile.availableCapital.toLocaleString('en-IN')}) exceeds the ₹50 lakh ceiling specified for the Term Loan Scheme under the SIH26091 framework. Please adjust your available margin capital to ₹5,00,000 or below.`;
-      } else if (lower.includes('scheme') || lower.includes('loan') || lower.includes('margin') || lower.includes('cap')) {
-        botResponse = `Under the SIH26091 10% beneficiary contribution model, your available margin of ₹${profile.availableCapital.toLocaleString('en-IN')} establishes an estimated project cost of ₹${financials.totalProjectCost.toLocaleString('en-IN')}. You qualify for the ${financials.selectedSchemeName} with an eligible loan of ₹${financials.eligibleLoan.toLocaleString('en-IN')} (capped at ₹${financials.schemeMaximumCap.toLocaleString('en-IN')}) at ${financials.annualInterestRate}% p.a. interest over ${financials.repaymentTenureYears} years.`;
-      } else if (lower.includes('competition') || lower.includes('competitor') || lower.includes('shops')) {
-        botResponse = `Our spatial engine discovered ${report.discoveredCompetitorsCount} existing competitor(s) in radius. This represents a ${report.saturationLevel} saturation level (${report.saturationIndex} index). Because local demand is steady, a well-equipped enterprise with prompt turnaround will be viable.`;
-      } else if (lower.includes('moratorium') || lower.includes('repayment') || lower.includes('quarter') || lower.includes('emi')) {
-        botResponse = `Under the ${financials.selectedSchemeName}, you receive an initial ${financials.moratoriumMonths}-month moratorium where no principal repayment is required. Following this grace period, your estimated quarterly repayment is approximately ₹${financials.quarterlyInstallment.toLocaleString('en-IN')} per quarter across ${(financials.repaymentTenureYears * 4) - Math.round(financials.moratoriumMonths / 3)} quarters.`;
-      } else if (lower.includes('break-even') || lower.includes('cost') || lower.includes('revenue')) {
-        botResponse = `To comfortably cover operating overheads plus quarterly debt servicing (~₹${Math.round(financials.quarterlyInstallment / 3).toLocaleString('en-IN')}/month equivalent), your enterprise in ${profile.villageTown || 'your area'} must generate at least ₹${financials.breakEvenMonthlyRevenue.toLocaleString('en-IN')} in monthly sales at a ${financials.grossMarginPercentage}% gross margin.`;
-      } else {
-        botResponse = `Based on your profile in ${profile.villageTown || 'your target area'}, your Opportunity Score is ${report.opportunityScore}/100 with a verdict of "${report.verdictLabel}". Your eligible funding tier is the ${financials.selectedSchemeName} with a ₹${financials.eligibleLoan.toLocaleString('en-IN')} loan and a ${financials.moratoriumMonths}-month moratorium.`;
+      setMessages([
+        ...newMessages,
+        {
+          sender: 'bot',
+          text: result.response,
+          time: 'Just now',
+          isAiGenerated: true
+        }
+      ]);
+
+      if (result.suggested_prompts && result.suggested_prompts.length > 0) {
+        setQuickPrompts(result.suggested_prompts);
       }
-
-      setMessages([...newMessages, { sender: 'bot', text: botResponse, time: 'Just now' }]);
-    }, 400);
+    } catch (err) {
+      setMessages([
+        ...newMessages,
+        {
+          sender: 'bot',
+          text: 'Sorry, could not connect to the advisory engine. Please verify the backend service is running.',
+          time: 'Just now'
+        }
+      ]);
+    } finally {
+      setIsLoading(false);
+    }
   };
-
-  const quickPrompts = [
-    "What is my eligible scheme & loan?",
-    "Explain moratorium & repayment",
-    "How is project cost calculated?",
-    "What is my monthly break-even?"
-  ];
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
@@ -130,6 +144,18 @@ export const AIAssistantChat: React.FC<AIAssistantChatProps> = ({
               </div>
             </div>
           ))}
+
+          {isLoading && (
+            <div className="flex items-start gap-2.5">
+              <div className="w-7 h-7 rounded-full bg-sbi-indigo text-white flex items-center justify-center shrink-0">
+                <Bot className="w-4 h-4 text-sbi-yellow" />
+              </div>
+              <div className="bg-slate-100 text-slate-700 p-3 rounded-xl rounded-tl-none border border-slate-200 flex items-center gap-2">
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-sbi-blue" />
+                <span className="text-[11px] text-slate-500">Gemini is synthesizing grounded advisory...</span>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Suggested Quick Prompt Chips */}

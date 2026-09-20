@@ -80,3 +80,8 @@ data/processed/*
 
 # Scratch scripts
 scratch/
+
+# Local databases
+*.db
+*.sqlite
+*.sqlite3
