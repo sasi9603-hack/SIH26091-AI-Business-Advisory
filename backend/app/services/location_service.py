@@ -174,9 +174,9 @@ async def geocode_location(
                             found_state = (
                                 addr.get("state")
                                 or state
-                                or "Andhra Pradesh"
+                                or "State"
                             )
-                            found_pin = addr.get("postcode") or pin_candidate or "522002"
+                            found_pin = addr.get("postcode") or pin_candidate or "000000"
                             bounding = [float(bbox) for bbox in item.get("boundingbox", [])] if item.get("boundingbox") else None
 
                             return GeocodeResponse(

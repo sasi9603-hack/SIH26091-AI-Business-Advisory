@@ -123,9 +123,9 @@ async def geocode_with_google(
 
                         v_name = v_name or village_town or district or "Local Center"
                         d_name = d_name or district or "District"
-                        s_name = s_name or state or "Andhra Pradesh"
+                        s_name = s_name or state or "State"
                         b_name = b_name or block or "Mandal"
-                        p_code = p_code or pincode or "522201"
+                        p_code = p_code or pincode or "000000"
 
                         bounds = result.get("geometry", {}).get("viewport", {})
                         bounding_box = None

@@ -133,9 +133,9 @@ export const InputWizard: React.FC<InputWizardProps> = ({
                 <label className="block text-xs font-semibold text-slate-600 mb-1">State *</label>
                 <input
                   type="text"
-                  value={profile.state || 'Andhra Pradesh'}
+                  value={profile.state || ''}
                   onChange={(e) => setProfile({ ...profile, state: e.target.value })}
-                  placeholder="e.g. Andhra Pradesh"
+                  placeholder="e.g. Maharashtra, UP, Karnataka, AP"
                   className="w-full bg-white border border-slate-300 rounded px-3 py-1.5 text-sm focus:border-sbi-blue focus:outline-none"
                   required
                 />
@@ -145,32 +145,32 @@ export const InputWizard: React.FC<InputWizardProps> = ({
                 <label className="block text-xs font-semibold text-slate-600 mb-1">District *</label>
                 <input
                   type="text"
-                  value={profile.district}
+                  value={profile.district || ''}
                   onChange={(e) => setProfile({ ...profile, district: e.target.value })}
-                  placeholder="e.g. Guntur"
+                  placeholder="e.g. Pune, Varanasi, YSR Kadapa"
                   className="w-full bg-white border border-slate-300 rounded px-3 py-1.5 text-sm focus:border-sbi-blue focus:outline-none"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">Block / Mandal</label>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">Block / Mandal / Tehsil</label>
                 <input
                   type="text"
                   value={profile.block || ''}
                   onChange={(e) => setProfile({ ...profile, block: e.target.value })}
-                  placeholder="e.g. Tenali Mandal"
+                  placeholder="e.g. Haveli, Pulivendla, Tenali"
                   className="w-full bg-white border border-slate-300 rounded px-3 py-1.5 text-sm focus:border-sbi-blue focus:outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">Village / Town Name *</label>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">Village / Town / City Name *</label>
                 <input
                   type="text"
-                  value={profile.villageTown}
+                  value={profile.villageTown || ''}
                   onChange={(e) => setProfile({ ...profile, villageTown: e.target.value })}
-                  placeholder="e.g. Tenali Town / Angalakuduru"
+                  placeholder="e.g. Pulivendula, Baramati, Tenali, Sarnath"
                   className="w-full bg-white border border-slate-300 rounded px-3 py-1.5 text-sm focus:border-sbi-blue focus:outline-none"
                   required
                 />
@@ -180,9 +180,9 @@ export const InputWizard: React.FC<InputWizardProps> = ({
                 <label className="block text-xs font-semibold text-slate-600 mb-1">Postal PIN Code (Optional)</label>
                 <input
                   type="text"
-                  value={profile.pincode}
+                  value={profile.pincode || ''}
                   onChange={(e) => setProfile({ ...profile, pincode: e.target.value })}
-                  placeholder="e.g. 522201"
+                  placeholder="e.g. 516390, 413102, 522201"
                   className="w-full bg-white border border-slate-300 rounded px-3 py-1.5 text-sm focus:border-sbi-blue focus:outline-none"
                 />
               </div>
