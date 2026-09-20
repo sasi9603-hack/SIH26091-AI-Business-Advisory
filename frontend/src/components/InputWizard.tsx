@@ -42,9 +42,10 @@ export const InputWizard: React.FC<InputWizardProps> = ({
         ...prev,
         lat: geo.latitude,
         lng: geo.longitude,
-        district: prev.district || geo.district,
-        state: prev.state || geo.state,
-        pincode: prev.pincode || geo.pincode
+        villageTown: geo.villageTown || prev.villageTown,
+        district: geo.district || prev.district,
+        state: geo.state || prev.state,
+        pincode: geo.pincode || prev.pincode
       }));
       setResolvedAddress(`${geo.displayName || geo.formattedAddress} (${geo.latitude.toFixed(4)}°N, ${geo.longitude.toFixed(4)}°E)`);
     } catch (err) {
@@ -72,10 +73,10 @@ export const InputWizard: React.FC<InputWizardProps> = ({
         ...profile,
         lat: geo.latitude,
         lng: geo.longitude,
-        villageTown: profile.villageTown || geo.villageTown,
-        district: profile.district || geo.district,
-        state: profile.state || geo.state,
-        pincode: profile.pincode || geo.pincode,
+        villageTown: geo.villageTown || profile.villageTown,
+        district: geo.district || profile.district,
+        state: geo.state || profile.state,
+        pincode: geo.pincode || profile.pincode,
         radiusKm: profile.radiusKm || 3.0
       };
 

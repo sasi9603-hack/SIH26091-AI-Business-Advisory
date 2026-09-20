@@ -85,71 +85,124 @@ async def geocode_location(
     except Exception as ge:
         logger.warning(f"Google Geocoding error: {ge}")
 
-    # 3. Build prioritized search query for Nominatim
-    parts = []
-    if village_town and village_town.strip():
-        parts.append(village_town.strip())
-    if block and block.strip():
-        parts.append(block.strip())
-    if district and district.strip():
-        parts.append(district.strip())
-    if state and state.strip():
-        parts.append(state.strip())
-    if pin_candidate:
-        parts.append(pin_candidate)
-    
-    # If no structured parts, use the raw query
-    search_term = ", ".join(parts) if parts else (query or "Guntur, Andhra Pradesh")
-    if not search_term.lower().endswith("india"):
-        search_term += ", India"
+    # 3. Build prioritized cascading search queries
+    # If the user typed a specific village/town or free-text query, test:
+    # 1) Full combination (village, mandal, district, state)
+    # 2) village + state
+    # 3) village alone
+    # 4) pincode
+    # 5) district + state
+    candidates = []
+    v = (village_town or "").strip()
+    b = (block or "").strip()
+    d = (district or "").strip()
+    s = (state or "").strip()
+    p = (pin_candidate or "").strip()
+    q = (query or "").strip()
 
-    # 3. Query OpenStreetMap Nominatim live
+    if q:
+        candidates.append(q if q.lower().endswith("india") else f"{q}, India")
+
+    if v and d and s:
+        candidates.append(f"{v}, {d}, {s}, India")
+    if v and b and s:
+        candidates.append(f"{v}, {b}, {s}, India")
+    if v and s:
+        candidates.append(f"{v}, {s}, India")
+    if v:
+        candidates.append(f"{v}, India")
+    if p and s:
+        candidates.append(f"{p}, {s}, India")
+    elif p:
+        candidates.append(f"{p}, India")
+    if d and s:
+        candidates.append(f"{d}, {s}, India")
+    elif d:
+        candidates.append(f"{d}, India")
+
+    # Remove duplicates while preserving order
+    search_queries = []
+    for c_term in candidates:
+        if c_term and c_term not in search_queries:
+            search_queries.append(c_term)
+
+    if not search_queries:
+        search_queries = ["Guntur, Andhra Pradesh, India"]
+
+    # 4. Query live geocoding service across search candidates
+    headers = {"User-Agent": settings.GEOCODING_USER_AGENT}
     try:
-        headers = {"User-Agent": settings.GEOCODING_USER_AGENT}
-        params = {
-            "q": search_term,
-            "format": "json",
-            "addressdetails": "1",
-            "limit": "1",
-            "countrycodes": "in"
-        }
         async with httpx.AsyncClient(timeout=4.5) as client:
-            resp = await client.get(settings.NOMINATIM_GEOCODE_URL, params=params, headers=headers)
-            if resp.status_code == 200:
-                data = resp.json()
-                if data and len(data) > 0:
-                    item = data[0]
-                    lat = float(item["lat"])
-                    lng = float(item["lon"])
-                    addr = item.get("address", {})
-                    
-                    found_village = village_town or addr.get("village") or addr.get("town") or addr.get("city") or addr.get("suburb") or (query or "Target Location")
-                    found_block = block or addr.get("county") or addr.get("subdistrict") or "Mandal"
-                    found_dist = district or addr.get("state_district") or addr.get("county") or "District"
-                    found_state = state or addr.get("state") or "State"
-                    found_pin = pin_candidate or addr.get("postcode", "522002")
-                    bounding = [float(b) for b in item.get("boundingbox", [])] if item.get("boundingbox") else None
+            for search_term in search_queries:
+                params = {
+                    "q": search_term,
+                    "format": "json",
+                    "addressdetails": "1",
+                    "limit": "1",
+                    "countrycodes": "in"
+                }
+                try:
+                    resp = await client.get(settings.NOMINATIM_GEOCODE_URL, params=params, headers=headers)
+                    if resp.status_code == 200:
+                        data = resp.json()
+                        if data and len(data) > 0:
+                            item = data[0]
+                            lat = float(item["lat"])
+                            lng = float(item["lon"])
+                            addr = item.get("address", {})
 
-                    return GeocodeResponse(
-                        latitude=lat,
-                        longitude=lng,
-                        display_name=item.get("display_name", f"{found_village}, {found_dist}"),
-                        village_town=found_village,
-                        block=found_block,
-                        district=found_dist,
-                        state=found_state,
-                        pincode=found_pin,
-                        formatted_address=item.get("display_name", f"{found_village}, {found_dist}, {found_state}"),
-                        is_approximate=False,
-                        bounding_box=bounding
-                    )
+                            found_village = (
+                                addr.get("village")
+                                or addr.get("town")
+                                or addr.get("city")
+                                or addr.get("suburb")
+                                or village_town
+                                or (query or "Target Location")
+                            )
+                            found_block = (
+                                addr.get("county")
+                                or addr.get("subdistrict")
+                                or block
+                                or "Mandal"
+                            )
+                            found_dist = (
+                                addr.get("state_district")
+                                or addr.get("county")
+                                or district
+                                or "District"
+                            )
+                            found_state = (
+                                addr.get("state")
+                                or state
+                                or "Andhra Pradesh"
+                            )
+                            found_pin = addr.get("postcode") or pin_candidate or "522002"
+                            bounding = [float(bbox) for bbox in item.get("boundingbox", [])] if item.get("boundingbox") else None
+
+                            return GeocodeResponse(
+                                latitude=lat,
+                                longitude=lng,
+                                display_name=item.get("display_name", f"{found_village}, {found_dist}"),
+                                village_town=found_village,
+                                block=found_block,
+                                district=found_dist,
+                                state=found_state,
+                                pincode=found_pin,
+                                formatted_address=item.get("display_name", f"{found_village}, {found_dist}, {found_state}"),
+                                is_approximate=False,
+                                bounding_box=bounding
+                            )
+                except Exception as query_err:
+                    logger.debug(f"Candidate query '{search_term}' failed: {query_err}")
     except Exception as e:
-        logger.warning(f"Live Nominatim lookup for '{search_term}' failed: {e}. Checking regional fallback.")
+        logger.warning(f"Live Nominatim lookup failed: {e}. Checking regional fallback.")
 
-    # 4. Check regional dictionary for district name match
+    # 5. Check regional dictionary for district name match
     dist_key = (district or "").lower().strip()
     if not dist_key and query:
         dist_key = query.lower().strip()
+    if not dist_key and village_town:
+        dist_key = village_town.lower().strip()
     
     for key, c in DISTRICT_COORDS.items():
         if key in dist_key or dist_key in key:
@@ -167,7 +220,7 @@ async def geocode_location(
                 is_approximate=True
             )
 
-    # 5. Default reliable Indian rural benchmark (Guntur District Center)
+    # 6. Default reliable Indian rural benchmark (Guntur District Center)
     fallback = DISTRICT_COORDS["guntur"]
     v_name = village_town or query or "Rural Village"
     d_name = district or fallback["district"]

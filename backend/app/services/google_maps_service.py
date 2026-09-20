@@ -51,89 +51,105 @@ async def geocode_with_google(
     if not api_key:
         return None
 
-    # Construct address search string
-    parts = []
-    if village_town and village_town.strip():
-        parts.append(village_town.strip())
-    if block and block.strip():
-        parts.append(block.strip())
-    if district and district.strip():
-        parts.append(district.strip())
-    if state and state.strip():
-        parts.append(state.strip())
-    if pincode and pincode.strip():
-        parts.append(pincode.strip())
+    # Construct prioritized address candidate strings
+    candidates = []
+    v = (village_town or "").strip()
+    b = (block or "").strip()
+    d = (district or "").strip()
+    s = (state or "").strip()
+    p = (pincode or "").strip()
+    q = (query or "").strip()
 
-    address_str = ", ".join(parts) if parts else (query or "Guntur, Andhra Pradesh")
-    if not address_str.lower().endswith("india"):
-        address_str += ", India"
+    if q:
+        candidates.append(q if q.lower().endswith("india") else f"{q}, India")
+    if v and d and s:
+        candidates.append(f"{v}, {d}, {s}, India")
+    if v and s:
+        candidates.append(f"{v}, {s}, India")
+    if v:
+        candidates.append(f"{v}, India")
+    if p and s:
+        candidates.append(f"{p}, {s}, India")
+    elif p:
+        candidates.append(f"{p}, India")
+    if d and s:
+        candidates.append(f"{d}, {s}, India")
+
+    search_queries = []
+    for c_term in candidates:
+        if c_term and c_term not in search_queries:
+            search_queries.append(c_term)
+
+    if not search_queries:
+        search_queries = ["Guntur, Andhra Pradesh, India"]
 
     try:
-        params = {
-            "address": address_str,
-            "components": "country:IN",
-            "key": api_key
-        }
         async with httpx.AsyncClient(timeout=5.0) as client:
-            resp = await client.get(settings.GOOGLE_GEOCODE_URL, params=params)
-            if resp.status_code == 200:
-                data = resp.json()
-                if data.get("status") == "OK" and data.get("results"):
-                    result = data["results"][0]
-                    location = result["geometry"]["location"]
-                    lat = float(location["lat"])
-                    lng = float(location["lng"])
-                    formatted = result.get("formatted_address", address_str)
+            for address_str in search_queries:
+                params = {
+                    "address": address_str,
+                    "components": "country:IN",
+                    "key": api_key
+                }
+                resp = await client.get(settings.GOOGLE_GEOCODE_URL, params=params)
+                if resp.status_code == 200:
+                    data = resp.json()
+                    if data.get("status") == "OK" and data.get("results"):
+                        result = data["results"][0]
+                        location = result["geometry"]["location"]
+                        lat = float(location["lat"])
+                        lng = float(location["lng"])
+                        formatted = result.get("formatted_address", address_str)
 
-                    # Extract address components
-                    v_name = village_town
-                    d_name = district
-                    s_name = state
-                    p_code = pincode
-                    b_name = block
+                        # Extract address components
+                        v_name = None
+                        d_name = None
+                        s_name = None
+                        p_code = None
+                        b_name = None
 
-                    for comp in result.get("address_components", []):
-                        types = comp.get("types", [])
-                        if "locality" in types and not v_name:
-                            v_name = comp["long_name"]
-                        elif "administrative_area_level_3" in types and not b_name:
-                            b_name = comp["long_name"]
-                        elif "administrative_area_level_2" in types and not d_name:
-                            d_name = comp["long_name"]
-                        elif "administrative_area_level_1" in types and not s_name:
-                            s_name = comp["long_name"]
-                        elif "postal_code" in types and not p_code:
-                            p_code = comp["long_name"]
+                        for comp in result.get("address_components", []):
+                            types = comp.get("types", [])
+                            if ("locality" in types or "sublocality" in types) and not v_name:
+                                v_name = comp["long_name"]
+                            elif "administrative_area_level_3" in types and not b_name:
+                                b_name = comp["long_name"]
+                            elif "administrative_area_level_2" in types and not d_name:
+                                d_name = comp["long_name"]
+                            elif "administrative_area_level_1" in types and not s_name:
+                                s_name = comp["long_name"]
+                            elif "postal_code" in types and not p_code:
+                                p_code = comp["long_name"]
 
-                    v_name = v_name or district or "Local Center"
-                    d_name = d_name or "District"
-                    s_name = s_name or "State"
-                    b_name = b_name or "Mandal"
-                    p_code = p_code or "522201"
+                        v_name = v_name or village_town or district or "Local Center"
+                        d_name = d_name or district or "District"
+                        s_name = s_name or state or "Andhra Pradesh"
+                        b_name = b_name or block or "Mandal"
+                        p_code = p_code or pincode or "522201"
 
-                    bounds = result.get("geometry", {}).get("viewport", {})
-                    bounding_box = None
-                    if bounds:
-                        bounding_box = [
-                            bounds.get("southwest", {}).get("lat", lat - 0.04),
-                            bounds.get("northeast", {}).get("lat", lat + 0.04),
-                            bounds.get("southwest", {}).get("lng", lng - 0.04),
-                            bounds.get("northeast", {}).get("lng", lng + 0.04)
-                        ]
+                        bounds = result.get("geometry", {}).get("viewport", {})
+                        bounding_box = None
+                        if bounds:
+                            bounding_box = [
+                                bounds.get("southwest", {}).get("lat", lat - 0.04),
+                                bounds.get("northeast", {}).get("lat", lat + 0.04),
+                                bounds.get("southwest", {}).get("lng", lng - 0.04),
+                                bounds.get("northeast", {}).get("lng", lng + 0.04)
+                            ]
 
-                    return GeocodeResponse(
-                        latitude=lat,
-                        longitude=lng,
-                        display_name=formatted,
-                        village_town=v_name,
-                        block=b_name,
-                        district=d_name,
-                        state=s_name,
-                        pincode=p_code,
-                        formatted_address=formatted,
-                        is_approximate=False,
-                        bounding_box=bounding_box
-                    )
+                        return GeocodeResponse(
+                            latitude=lat,
+                            longitude=lng,
+                            display_name=formatted,
+                            village_town=v_name,
+                            block=b_name,
+                            district=d_name,
+                            state=s_name,
+                            pincode=p_code,
+                            formatted_address=formatted,
+                            is_approximate=False,
+                            bounding_box=bounding_box
+                        )
     except Exception as exc:
         logger.warning(f"Google Geocoding API request failed ({exc}); falling back to secondary geocoder.")
     
